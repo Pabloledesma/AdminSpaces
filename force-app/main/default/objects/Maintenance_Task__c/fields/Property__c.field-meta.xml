@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Property__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>Propiedad a la que pertenece esta tarea de mantenimiento. Relación de tipo Lookup (no Master-Detail): el registro es obligatorio (required), pero no se elimina en cascada si se borra la propiedad.</description>
+    <label>Property</label>
+    <referenceTo>Property__c</referenceTo>
+    <relationshipLabel>Maintenance Tasks</relationshipLabel>
+    <relationshipName>Maintenance_Tasks</relationshipName>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

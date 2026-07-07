@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Is_Demo__c</fullName>
+    <defaultValue>true</defaultValue>
+    <description>Indica si el registro es un dato de demostración visible para el Guest User del sitio Experience Cloud. Se usa como criterio en las Sharing Rules del sitio público — solo los registros con este campo en true se comparten con usuarios no autenticados. Default: true.</description>
+    <label>Is Demo</label>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>
