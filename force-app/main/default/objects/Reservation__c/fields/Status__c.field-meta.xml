@@ -4,7 +4,6 @@
     <description>Estado del ciclo de vida de la reserva. Valores: Pending, Confirmed, Checked In, Checked Out, Cancelled.</description>
     <label>Status</label>
     <required>false</required>
-    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>

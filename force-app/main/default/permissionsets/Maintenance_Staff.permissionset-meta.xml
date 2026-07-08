@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Encargados de la Limpieza y mantenimiento</description>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Maintenance_Task__c.Description__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Maintenance_Task__c.Due_Date__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Maintenance_Task__c.Estimated_Cost__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Maintenance_Task__c.Priority__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Maintenance_Task__c.Room__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Maintenance_Task__c.Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>Maintenance Staff</label>
+    <license>Salesforce</license>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Maintenance_Task__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+</PermissionSet>

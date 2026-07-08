@@ -4,7 +4,6 @@
     <description>Estado de renovación de la propiedad. Valores: Not Started, In Progress, Completed.</description>
     <label>Renovation Status</label>
     <required>false</required>
-    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>

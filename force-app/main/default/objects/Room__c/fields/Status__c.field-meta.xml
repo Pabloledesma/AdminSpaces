@@ -4,7 +4,6 @@
     <description>Estado operativo actual de la habitación. Valores: Available, Occupied, Maintenance, Cleaning. Se muestra en el Compact Layout y en las tarjetas del LWC.</description>
     <label>Status</label>
     <required>false</required>
-    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>

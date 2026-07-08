@@ -2,10 +2,11 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>City__c</fullName>
     <description>Ciudad donde se ubica la propiedad. Se usa para agrupar y filtrar propiedades por ubicación.</description>
+    <externalId>false</externalId>
     <label>City</label>
     <length>100</length>
     <required>false</required>
-    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Text</type>
+    <unique>false</unique>
 </CustomField>
