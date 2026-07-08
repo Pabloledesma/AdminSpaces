@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Property__c</fullName>
+    <description>Propiedad a la que pertenece esta habitación. Relación Master-Detail: si se elimina la propiedad, se eliminan también sus habitaciones asociadas. Habilita el Roll-Up Summary Room_Count__c en Property__c y propaga el sharing del padre — relevante para las Sharing Rules del Guest User.</description>
+    <label>Property</label>
+    <referenceTo>Property__c</referenceTo>
+    <relationshipLabel>Rooms</relationshipLabel>
+    <relationshipName>Rooms</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

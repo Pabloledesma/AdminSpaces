@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Status__c</fullName>
-    <description>Estado actual de la tarea de mantenimiento. Valores: Pending, In Progress, Done.</description>
-    <label>Status</label>
+    <fullName>Renovation_Status__c</fullName>
+    <description>Estado de renovación de la propiedad. Valores: Not Started, In Progress, Completed.</description>
+    <label>Renovation Status</label>
     <required>false</required>
+    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>
@@ -11,9 +12,9 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>Pending</fullName>
+                <fullName>Not Started</fullName>
                 <default>false</default>
-                <label>Pending</label>
+                <label>Not Started</label>
             </value>
             <value>
                 <fullName>In Progress</fullName>
@@ -21,9 +22,9 @@
                 <label>In Progress</label>
             </value>
             <value>
-                <fullName>Done</fullName>
+                <fullName>Completed</fullName>
                 <default>false</default>
-                <label>Done</label>
+                <label>Completed</label>
             </value>
         </valueSetDefinition>
     </valueSet>

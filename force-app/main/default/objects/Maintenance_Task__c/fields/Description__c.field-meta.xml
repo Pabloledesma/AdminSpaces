@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Description__c</fullName>
-    <description>Descripción de la tarea</description>
+    <description>Descripción detallada de la tarea de mantenimiento: qué hay que hacer, contexto adicional o instrucciones para el equipo que la ejecuta.</description>
     <label>Description</label>
     <length>32768</length>
     <trackTrending>false</trackTrending>

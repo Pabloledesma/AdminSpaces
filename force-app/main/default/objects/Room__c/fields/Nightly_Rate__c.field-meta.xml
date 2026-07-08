@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Nightly_Rate__c</fullName>
+    <description>Tarifa por noche de la habitación. Se usa como base para calcular Total_Amount__c en Reservation__c (vía trigger de Apex en Fase 2).</description>
+    <label>Nightly Rate</label>
+    <precision>16</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Currency</type>
+</CustomField>

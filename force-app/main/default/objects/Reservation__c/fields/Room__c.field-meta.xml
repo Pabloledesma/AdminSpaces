@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Room__c</fullName>
+    <description>Habitación reservada. Relación Master-Detail: si se elimina la habitación, se eliminan también sus reservas asociadas. Habilita el Roll-Up Summary Reservation_Count__c en Room__c.</description>
+    <label>Room</label>
+    <referenceTo>Room__c</referenceTo>
+    <relationshipLabel>Reservations</relationshipLabel>
+    <relationshipName>Reservations</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

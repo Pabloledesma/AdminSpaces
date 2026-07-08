@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Priority__c</fullName>
-    <description>Prioridad de la tarea de mantenimiento. Valores: Low, Medium, High, Urgent. Se usa para ordenar la cola de trabajo del equipo de mantenimiento.</description>
-    <label>Priority</label>
+    <fullName>Room_Type__c</fullName>
+    <description>Tipo de habitación. Valores: Single, Double, Suite, Studio. Se usa para mostrar el tipo en las tarjetas del LWC y para filtrar disponibilidad por tipo.</description>
+    <label>Room Type</label>
     <required>false</required>
+    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>
@@ -11,24 +12,24 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>Low</fullName>
+                <fullName>Single</fullName>
                 <default>false</default>
-                <label>Low</label>
+                <label>Single</label>
             </value>
             <value>
-                <fullName>Medium</fullName>
+                <fullName>Double</fullName>
                 <default>false</default>
-                <label>Medium</label>
+                <label>Double</label>
             </value>
             <value>
-                <fullName>High</fullName>
+                <fullName>Suite</fullName>
                 <default>false</default>
-                <label>High</label>
+                <label>Suite</label>
             </value>
             <value>
-                <fullName>Urgent</fullName>
+                <fullName>Studio</fullName>
                 <default>false</default>
-                <label>Urgent</label>
+                <label>Studio</label>
             </value>
         </valueSetDefinition>
     </valueSet>

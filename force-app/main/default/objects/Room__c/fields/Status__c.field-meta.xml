@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Priority__c</fullName>
-    <description>Prioridad de la tarea de mantenimiento. Valores: Low, Medium, High, Urgent. Se usa para ordenar la cola de trabajo del equipo de mantenimiento.</description>
-    <label>Priority</label>
+    <fullName>Status__c</fullName>
+    <description>Estado operativo actual de la habitación. Valores: Available, Occupied, Maintenance, Cleaning. Se muestra en el Compact Layout y en las tarjetas del LWC.</description>
+    <label>Status</label>
     <required>false</required>
+    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>
@@ -11,24 +12,24 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>Low</fullName>
+                <fullName>Available</fullName>
                 <default>false</default>
-                <label>Low</label>
+                <label>Available</label>
             </value>
             <value>
-                <fullName>Medium</fullName>
+                <fullName>Occupied</fullName>
                 <default>false</default>
-                <label>Medium</label>
+                <label>Occupied</label>
             </value>
             <value>
-                <fullName>High</fullName>
+                <fullName>Maintenance</fullName>
                 <default>false</default>
-                <label>High</label>
+                <label>Maintenance</label>
             </value>
             <value>
-                <fullName>Urgent</fullName>
+                <fullName>Cleaning</fullName>
                 <default>false</default>
-                <label>Urgent</label>
+                <label>Cleaning</label>
             </value>
         </valueSetDefinition>
     </valueSet>

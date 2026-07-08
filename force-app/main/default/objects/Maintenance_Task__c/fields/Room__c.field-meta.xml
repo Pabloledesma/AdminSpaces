@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Room__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
-    <description>Habitación en la que se realiza la tarea de mantenimiento</description>
+    <description>Habitación en la que se realiza la tarea de mantenimiento. Lookup opcional (deleteConstraint SetNull): si se borra la habitación, el campo simplemente queda vacío en vez de eliminar la tarea.</description>
     <label>Room</label>
     <referenceTo>Room__c</referenceTo>
     <relationshipLabel>Maintenance Tasks</relationshipLabel>
