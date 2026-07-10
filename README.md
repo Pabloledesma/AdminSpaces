@@ -48,6 +48,8 @@ ReservationTriggerHandler   (orquesta antes de insert/update, sin lógica de neg
 
 `TestDataFactory` centraliza la creación de datos de prueba para evitar duplicación entre tests.
 
+**`RoomCheckoutScheduler`** (Schedulable, pensado para correr una vez al día): libera la habitación de las reservas ya marcadas `Checked Out` el día de su checkout, y extiende un día el `Check_Out_Date__c` de las que no hicieron checkout (no-show) — la noche extra se recalcula sola vía el trigger existente. El conflicto entre una extensión y la reserva del siguiente huésped queda como trabajo pendiente (ver `docs/property-manager-roadmap.md`).
+
 ## Testing
 
 ```bash
@@ -62,7 +64,7 @@ Estado actual por hito (detalle completo con historias en [`docs/property-manage
 
 - ✅ **Hito 0** — Modelo de datos
 - 🟡 **Hito 1** — Seguridad y permisos (Permission Sets listos; Guest User pendiente del sitio Experience Cloud)
-- 🟡 **Hito 2** — Lógica de negocio en Apex (no overbooking y cálculo de total listos; quedan automatizaciones de estado, tareas de limpieza y notificaciones)
+- 🟡 **Hito 2** — Lógica de negocio en Apex (no overbooking, cálculo de total y liberación/no-show de habitaciones listos; quedan tareas de limpieza automáticas y notificaciones)
 - ⬜ **Hito 3** — Componentes LWC
 - ⬜ **Hito 4** — Testing (Jest para LWC)
 - ⬜ **Hito 5** — Sitio Experience Cloud

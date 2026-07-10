@@ -15,9 +15,9 @@ Marca cada historia cuando la completes. El orden importa: cada hito construye s
 
 > Antes de escribir una sola línea de Apex, necesitas decidir quién puede ver/editar qué. Esto evita rehacer trabajo después.
 
-- [ ] **Historia 1.1:** Como administrador de la plataforma, quiero un Permission Set "Property Manager" que dé acceso completo (CRUD) a los 5 objetos custom, para que solo usuarios autorizados gestionen la operación completa.
-- [ ] **Historia 1.2:** Como encargado de limpieza/mantenimiento, quiero un Permission Set separado que solo me dé acceso a `Maintenance_Task__c` (sin ver reservas ni gastos), para respetar el principio de menor privilegio.
-- [ ] **Historia 1.3:** Como visitante no autenticado del futuro sitio Experience, quiero ver únicamente los registros marcados como `Is_Demo__c = true`, para que el portafolio sea público sin exponer datos reales del hogar.
+- [X] **Historia 1.1:** Como administrador de la plataforma, quiero un Permission Set "Property Manager" que dé acceso completo (CRUD) a los 5 objetos custom, para que solo usuarios autorizados gestionen la operación completa.
+- [X] **Historia 1.2:** Como encargado de limpieza/mantenimiento, quiero un Permission Set separado que solo me dé acceso a `Maintenance_Task__c` (sin ver reservas ni gastos), para respetar el principio de menor privilegio.
+- [ ] **Historia 1.3:** Como visitante no autenticado del futuro sitio Experience, quiero ver únicamente los registros marcados como `Is_Demo__c = true`, para que el portafolio sea público sin exponer datos reales del hogar. *(bloqueada: requiere que exista el sitio Experience Cloud del Hito 5 antes de poder crear la Sharing Rule del Guest User)*
 
 ---
 
@@ -27,9 +27,10 @@ Marca cada historia cuando la completes. El orden importa: cada hito construye s
 
 - [X] **Historia 2.1:** Como administrador de la propiedad, quiero que el sistema impida crear una reserva si las fechas se solapan con otra reserva existente para la misma habitación, para evitar overbooking. *(la que ya empezamos)*
 - [X] **Historia 2.2:** Como administrador, quiero que el campo `Total_Amount__c` de una reserva se calcule automáticamente al crearla o modificarla, para no depender de cálculo manual.
-- [ ] **Historia 2.3:** Como administrador, quiero que las habitaciones cambien automáticamente a estado "Available" el día del checkout, para no tener que actualizarlas a mano.
+- [X] **Historia 2.3:** Como administrador, quiero que las habitaciones cambien automáticamente a estado "Available" el día del checkout, para no tener que actualizarlas a mano. *(incluye también la extensión automática de una noche por no-show; ver notas de seguimiento)*
 - [ ] **Historia 2.4:** Como administrador, quiero que se cree automáticamente una tarea de limpieza (`Maintenance_Task__c`) la noche antes de cada checkout, para no olvidar coordinar al personal.
 - [ ] **Historia 2.5:** Como huésped, quiero recibir una notificación (o que se procese algo en segundo plano) cuando mi reserva se confirma, para practicar Queueable Apex.
+- [ ] **Historia 2.6 (backlog, sin priorizar):** Como administrador, quiero que cuando un no-show entre en conflicto real con la reserva del siguiente huésped, el sistema deje registrado el conflicto (tarea/notificación) para resolución manual, y contemplar descuento al huésped afectado + posible penalidad al que no confirmó el checkout a tiempo.
 
 ---
 
@@ -73,4 +74,7 @@ Marca cada historia cuando la completes. El orden importa: cada hito construye s
 
 *(usa este espacio para anotar decisiones importantes que tomes durante la implementación, útil para cuando armes el case study del portafolio)*
 
--
+- **Regla de solapamiento (Historia 2.1):** dos reservas de la misma habitación se solapan si `nueva.CheckIn < existente.CheckOut AND existente.CheckIn < nueva.CheckOut` (comparación estricta). Esto implica que el mismo día puede ser checkout de una reserva y checkin de otra sin considerarse solapamiento (regla común en hotelería). Solo bloquean reservas en estado `Pending`, `Confirmed` o `Checked In`; `Cancelled` nunca bloquea.
+- **Arquitectura del trigger de `Reservation__c`:** `ReservationTriggerHandler` solo orquesta; el SOQL vive en `ReservationSelector`/`RoomSelector` (DIP), la regla de solapamiento en `ReservationOverlapValidator` (SRP/OCP) y el cálculo de precio en `ReservationPricingCalculator` (SRP) — reutilizados tanto en `OnBeforeInsert` como en `OnBeforeUpdate`.
+- **Historia 2.3 — no-show:** si una reserva no se marca `Checked Out` el día de su checkout, `RoomCheckoutScheduler` extiende `Check_Out_Date__c` un día (lo que dispara el recálculo automático de `Total_Amount__c` vía el trigger existente, cobrando la noche extra). **Pendiente (Historia 2.6):** qué pasa cuando esa extensión choca de verdad con la reserva del siguiente huésped — hoy el `update` de esa reserva puntual simplemente falla (el resto del batch sigue con `Database.update(..., false)`) sin dejar rastro para que el personal lo resuelva. Ahí también entra la idea de ofrecer un descuento al huésped desplazado y/o cobrar una penalidad al que no confirmó el checkout a tiempo.
+- **OWD:** `Property__c` y `Maintenance_Task__c` en `Private`; `Room__c`, `Reservation__c` y `Expense__c` en `ControlledByParent` (heredan de su relación Master-Detail).

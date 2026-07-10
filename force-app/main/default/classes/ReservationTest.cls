@@ -1,6 +1,114 @@
 @isTest
 private class ReservationTest {
 
+    @IsTest
+    static void las_habitaciones_cambian_de_estado_el_dia_del_checkout(){
+
+        Property__c prop = TestDataFactory.createProperty();
+        insert prop;
+        Room__c room = TestDataFactory.createRoomWithRate(prop.Id, 10);
+        insert room;
+        insert TestDataFactory.buildReservation(room.Id, Date.today().addDays(-1), Date.today(), 'Checked Out');
+
+        Test.startTest();
+            new RoomCheckoutScheduler().execute(null);
+        Test.stopTest();
+
+        Room__c reloadedRoom = [SELECT Status__c FROM Room__c WHERE Id = :room.Id];
+        System.assertEquals('Available', reloadedRoom.Status__c, 'La habitación debe quedar disponible el día del checkout');
+    }
+
+    @IsTest
+    static void no_libera_la_habitacion_si_la_reserva_no_esta_marcada_como_checked_out(){
+
+        Property__c prop = TestDataFactory.createProperty();
+        insert prop;
+        Room__c room = TestDataFactory.createRoomWithRate(prop.Id, 10);
+        room.Status__c = 'Occupied';
+        insert room;
+        Reservation__c reservation = TestDataFactory.buildReservation(room.Id, Date.today().addDays(-1), Date.today(), 'Confirmed');
+        insert reservation;
+
+        Test.startTest();
+            new RoomCheckoutScheduler().execute(null);
+        Test.stopTest();
+
+        Room__c reloadedRoom = [SELECT Status__c FROM Room__c WHERE Id = :room.Id];
+        System.assertEquals('Occupied', reloadedRoom.Status__c, 'La habitación no debe liberarse si el huésped no hizo checkout');
+
+        Reservation__c reloadedReservation = [SELECT Check_Out_Date__c, Total_Amount__c FROM Reservation__c WHERE Id = :reservation.Id];
+        System.assertEquals(Date.today().addDays(1), reloadedReservation.Check_Out_Date__c, 'El checkout debe extenderse un día por no-show');
+        System.assertEquals(20, reloadedReservation.Total_Amount__c, 'Se debe cobrar la noche extra (2 noches x 10 = 20)');
+    }
+
+    @IsTest
+    static void no_toca_habitaciones_con_checkout_manana(){
+
+        Property__c prop = TestDataFactory.createProperty();
+        insert prop;
+        Room__c room = TestDataFactory.createRoomWithRate(prop.Id, 10);
+        room.Status__c = 'Occupied';
+        insert room;
+        insert TestDataFactory.buildReservation(room.Id, Date.today(), Date.today().addDays(1), 'Checked Out');
+
+        Test.startTest();
+            new RoomCheckoutScheduler().execute(null);
+        Test.stopTest();
+
+        Room__c reloadedRoom = [SELECT Status__c FROM Room__c WHERE Id = :room.Id];
+        System.assertEquals('Occupied', reloadedRoom.Status__c, 'Una reserva que hace checkout mañana no debe afectar la habitación hoy');
+    }
+
+    @IsTest
+    static void no_reprocesa_checkouts_de_dias_anteriores(){
+
+        Property__c prop = TestDataFactory.createProperty();
+        insert prop;
+        Room__c room = TestDataFactory.createRoomWithRate(prop.Id, 10);
+        room.Status__c = 'Occupied';
+        insert room;
+        insert TestDataFactory.buildReservation(room.Id, Date.today().addDays(-2), Date.today().addDays(-1), 'Checked Out');
+
+        Test.startTest();
+            new RoomCheckoutScheduler().execute(null);
+        Test.stopTest();
+
+        Room__c reloadedRoom = [SELECT Status__c FROM Room__c WHERE Id = :room.Id];
+        System.assertEquals('Occupied', reloadedRoom.Status__c, 'Un checkout de un día anterior no debe reprocesarse hoy');
+    }
+
+    @IsTest
+    static void libera_multiples_habitaciones_en_una_sola_corrida(){
+
+        Property__c prop = TestDataFactory.createProperty();
+        insert prop;
+        Room__c checkedOutRoom1 = TestDataFactory.createRoomWithRate(prop.Id, 10);
+        checkedOutRoom1.Status__c = 'Occupied';
+        Room__c checkedOutRoom2 = TestDataFactory.createRoomWithRate(prop.Id, 20);
+        checkedOutRoom2.Status__c = 'Occupied';
+        Room__c stillOccupiedRoom = TestDataFactory.createRoomWithRate(prop.Id, 30);
+        stillOccupiedRoom.Status__c = 'Occupied';
+        insert new List<Room__c>{ checkedOutRoom1, checkedOutRoom2, stillOccupiedRoom };
+
+        insert new List<Reservation__c>{
+            TestDataFactory.buildReservation(checkedOutRoom1.Id, Date.today().addDays(-1), Date.today(), 'Checked Out'),
+            TestDataFactory.buildReservation(checkedOutRoom2.Id, Date.today().addDays(-3), Date.today(), 'Checked Out'),
+            TestDataFactory.buildReservation(stillOccupiedRoom.Id, Date.today().addDays(-1), Date.today(), 'Confirmed')
+        };
+
+        Test.startTest();
+            new RoomCheckoutScheduler().execute(null);
+        Test.stopTest();
+
+        Map<Id, Room__c> roomsById = new Map<Id, Room__c>(
+            [SELECT Id, Status__c FROM Room__c WHERE Id IN :new Set<Id>{ checkedOutRoom1.Id, checkedOutRoom2.Id, stillOccupiedRoom.Id }]
+        );
+
+        System.assertEquals('Available', roomsById.get(checkedOutRoom1.Id).Status__c, 'Room1 hizo checkout, debe quedar disponible');
+        System.assertEquals('Available', roomsById.get(checkedOutRoom2.Id).Status__c, 'Room2 hizo checkout, debe quedar disponible');
+        System.assertEquals('Occupied', roomsById.get(stillOccupiedRoom.Id).Status__c, 'Room3 no hizo checkout, debe seguir ocupada');
+    }
+
     // -- Casos Calculo Total Amount
 
     @IsTest
