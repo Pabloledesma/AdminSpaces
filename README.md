@@ -1,18 +1,98 @@
-# Salesforce DX Project: Next Steps
+# AdminSpaces — Property Manager
 
-Now that you’ve created a Salesforce DX project, what’s next? Here are some documentation resources to get you started.
+Proyecto de portafolio para practicar el ciclo completo de desarrollo en Salesforce: modelo de datos, seguridad, Apex, LWC, Experience Cloud y Agentforce, construido sobre un caso de uso realista de gestión de propiedades en alquiler (habitaciones, reservas, mantenimiento y gastos).
 
-## How Do You Plan to Deploy Your Changes?
+El desarrollo está organizado en **Hitos** con **Historias de Usuario**, documentados en [`docs/property-manager-roadmap.md`](docs/property-manager-roadmap.md). Cada hito construye sobre el anterior: modelo de datos → seguridad → lógica de negocio en Apex → componentes LWC → testing → sitio Experience Cloud → Agentforce.
 
-Do you want to deploy a set of changes, or create a self-contained application? Choose a [development model](https://developer.salesforce.com/tools/vscode/en/user-guide/development-models).
+## Modelo de datos
 
-## Configure Your Salesforce DX Project
+5 objetos custom con relaciones Master-Detail (`Property__c → Room__c → Reservation__c`, `Property__c → Expense__c`) y Lookup (`Maintenance_Task__c`). Documentado en detalle, incluyendo el diagrama entidad-relación y el razonamiento de cada decisión de diseño, en [`docs/property-manager-data-model.md`](docs/property-manager-data-model.md).
 
-The `sfdx-project.json` file contains useful configuration information for your project. See [Salesforce DX Project Configuration](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_ws_config.htm) in the _Salesforce DX Developer Guide_ for details about this file.
+| Objeto | Relación | Propósito |
+|---|---|---|
+| `Property__c` | — | Propiedad/activo raíz |
+| `Room__c` | Master-Detail → `Property__c` | Habitaciones de una propiedad |
+| `Reservation__c` | Master-Detail → `Room__c`, Lookup → `Contact` (huésped) | Reservas de huéspedes |
+| `Maintenance_Task__c` | Lookup → `Property__c`, `Room__c` | Tareas de mantenimiento/limpieza |
+| `Expense__c` | Master-Detail → `Property__c` | Gastos de renovación/operación |
 
-## Read All About It
+Todos los objetos tienen un campo `Is_Demo__c` (default `true`), pensado para las Sharing Rules del futuro Guest User del sitio Experience Cloud: solo se expondrán públicamente los registros marcados como demo, nunca el objeto completo.
 
-- [Salesforce Extensions Documentation](https://developer.salesforce.com/tools/vscode/)
-- [Salesforce CLI Setup Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_intro.htm)
-- [Salesforce DX Developer Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_intro.htm)
-- [Salesforce CLI Command Reference](https://developer.salesforce.com/docs/atlas.en-us.sfdx_cli_reference.meta/sfdx_cli_reference/cli_reference.htm)
+## Seguridad y permisos
+
+- **OWD**: `Private` en los objetos raíz (`Property__c`, `Maintenance_Task__c`); `ControlledByParent` en los que cuelgan de una relación Master-Detail (`Room__c`, `Reservation__c`, `Expense__c`).
+- **Permission Sets**:
+  - `Property_Manager` — acceso operativo completo a los 5 objetos, para administradores de la plataforma.
+  - `Maintenance_Staff` — acceso exclusivo a `Maintenance_Task__c`, aplicando el principio de menor privilegio para el personal de limpieza/mantenimiento.
+- **Guest User (pendiente)**: Sharing Rule por criterio (`Is_Demo__c = true`) para el sitio Experience Cloud, a implementar una vez creado el sitio (Hito 5).
+
+## Lógica de negocio (Apex)
+
+El trigger de `Reservation__c` implementa dos reglas de negocio con TDD (tests escritos antes que la implementación):
+
+1. **No overbooking**: no se puede crear ni editar una reserva si sus fechas se solapan con otra reserva activa (`Pending`, `Confirmed`, `Checked In`) de la misma habitación. Las reservas `Cancelled` no bloquean.
+2. **Cálculo automático de `Total_Amount__c`**: se calcula (noches × `Nightly_Rate__c` de la habitación) al crear o modificar una reserva, siempre que no haya solapamiento.
+
+**Arquitectura**, siguiendo capas de responsabilidad única en vez de lógica concentrada en el trigger:
+
+```
+Reservation.trigger
+      │
+      ▼
+ReservationTriggerHandler   (orquesta antes de insert/update, sin lógica de negocio propia)
+      │
+      ├── ReservationSelector / RoomSelector   (todo el SOQL de estos objetos vive acá — DIP)
+      ├── ReservationOverlapValidator          (regla de solapamiento, reusable — SRP/OCP)
+      └── ReservationPricingCalculator         (regla de cálculo de precio, reusable — SRP)
+```
+
+`TestDataFactory` centraliza la creación de datos de prueba para evitar duplicación entre tests.
+
+## Testing
+
+```bash
+sf apex run test --class-names ReservationTest --target-org <alias> --result-format human --synchronous
+```
+
+La suite de `ReservationTest` cubre casos positivos, negativos (todas las variantes de solapamiento de fechas), edge cases de reglas de negocio (back-to-back, reservas canceladas) y volumen (200 registros en bulk, solapamientos dentro del mismo batch).
+
+## Roadmap
+
+Estado actual por hito (detalle completo con historias en [`docs/property-manager-roadmap.md`](docs/property-manager-roadmap.md)):
+
+- ✅ **Hito 0** — Modelo de datos
+- 🟡 **Hito 1** — Seguridad y permisos (Permission Sets listos; Guest User pendiente del sitio Experience Cloud)
+- 🟡 **Hito 2** — Lógica de negocio en Apex (no overbooking y cálculo de total listos; quedan automatizaciones de estado, tareas de limpieza y notificaciones)
+- ⬜ **Hito 3** — Componentes LWC
+- ⬜ **Hito 4** — Testing (Jest para LWC)
+- ⬜ **Hito 5** — Sitio Experience Cloud
+- ⬜ **Hito 6** — Agentforce
+
+## Desarrollo asistido por IA
+
+Este repo usa [`sf-skills`](https://github.com/forcedotcom/sf-skills) (instaladas en `.agents/skills/`, referenciadas en `skills-lock.json`) para asistir el desarrollo con agentes de IA en tareas de Apex, LWC, metadata, permission sets y Experience Cloud.
+
+## Cómo levantar el proyecto
+
+Requiere [Salesforce CLI](https://developer.salesforce.com/tools/salesforcecli) y un org autenticado.
+
+```bash
+# Ver el org configurado por defecto
+sf config get target-org
+
+# Retrieve de metadata desde el org
+sf project retrieve start --target-org <alias>
+
+# Deploy de metadata al org
+sf project deploy start --target-org <alias>
+
+# Correr los tests de Apex
+sf apex run test --target-org <alias> --result-format human --synchronous
+```
+
+Para levantar un scratch org nuevo con la definición incluida en `config/project-scratch-def.json`:
+
+```bash
+sf org create scratch --definition-file config/project-scratch-def.json --alias <alias> --set-default
+sf project deploy start --target-org <alias>
+```

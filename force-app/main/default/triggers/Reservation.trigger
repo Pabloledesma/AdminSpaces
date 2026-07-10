@@ -6,5 +6,11 @@ trigger Reservation on Reservation__c (before insert, before update) {
             handler.OnBeforeInsert(trigger.New);
         }
     }
+
+    if( Trigger.isUpdate ){
+        if( Trigger.isBefore ){
+            handler.OnBeforeUpdate(trigger.new, trigger.oldMap);
+        }
+    }
     
 }

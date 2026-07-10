@@ -1,39 +1,135 @@
 @isTest
 private class ReservationTest {
 
-    private static Property__c createProperty() {
-        return new Property__c(Name = 'Test Property', Is_Demo__c = true);
+    // -- Casos Calculo Total Amount
+
+    @IsTest
+    static void se_reserva_una_sola_noche(){
+
+        Property__c prop = TestDataFactory.createProperty();
+        insert prop;
+        Room__c room = TestDataFactory.createRoomWithRate(prop.Id, 10);
+        insert room;
+        
+        Test.startTest();
+        
+            insert TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 11));
+            Reservation__c reservation = [SELECT Id, Total_Amount__c FROM Reservation__c WHERE Room__c =: room.Id LIMIT 1];
+      
+        Test.stopTest();
+
+        System.assertEquals(10, reservation.Total_Amount__c, 'El valor total de la reserva no es correcto');
+        
     }
 
-    private static Room__c createRoom(Id propertyId) {
-        return new Room__c(Property__c = propertyId, Room_Type__c = 'Single', Is_Demo__c = true);
+    /**
+     * Regresión del bug encontrado en OnBeforeInsert: antes del fix, el código
+     * trackeaba las reservas solapadas con un Map<Id, Reservation__c> — pero en
+     * before insert TODAS las reservas nuevas tienen Id == null, así que el mapa
+     * colapsaba todo en una sola entrada y, apenas UNA reserva del batch se
+     * solapaba, TODAS las demás (incluidas las válidas) se saltaban el cálculo
+     * de Total_Amount__c. El fix cambió el Map<Id,...> por un Set<Reservation__c>.
+     */
+    @IsTest
+    static void calcula_el_total_de_la_reserva_valida_aunque_otra_del_mismo_batch_se_solape(){
+
+        Property__c prop = TestDataFactory.createProperty();
+        insert prop;
+        Room__c room = TestDataFactory.createRoomWithRate(prop.Id, 10);
+        insert room;
+        insert TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 1), Date.newInstance(2026, 8, 5));
+
+        Reservation__c valid = TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 9, 1), Date.newInstance(2026, 9, 3)); // 2 noches x 10 = 20, no se solapa
+        Reservation__c overlapping = TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 2), Date.newInstance(2026, 8, 4)); // se solapa con la existente
+
+        Test.startTest();
+            List<Database.SaveResult> results = Database.insert(new List<Reservation__c>{ valid, overlapping }, false);
+        Test.stopTest();
+
+        System.assert(results[0].isSuccess(), 'La reserva válida debe insertarse');
+        System.assert(!results[1].isSuccess(), 'La reserva solapada debe fallar');
+
+        Reservation__c reloaded = [SELECT Total_Amount__c FROM Reservation__c WHERE Id = :valid.Id];
+        System.assertEquals(20, reloaded.Total_Amount__c, 'La reserva válida debe tener su Total_Amount__c calculado aunque otra del mismo batch se haya solapado');
     }
 
-    private static Reservation__c buildReservation(Id roomId, Date checkIn, Date checkOut) {
-        return buildReservation(roomId, checkIn, checkOut, 'Confirmed');
+    /**
+     * Sospecha a verificar sobre OnBeforeUpdate: la consulta de existingReservations
+     * no excluye el propio registro que se está editando. Si el nuevo rango de
+     * fechas se solapa con el rango ANTERIOR de la misma reserva (algo común al
+     * simplemente correr las fechas unos días), podría auto-rechazarse aunque no
+     * exista ninguna otra reserva en conflicto real.
+     */
+    @IsTest
+    static void puede_editar_reserva_desplazando_sus_propias_fechas_sin_otras_reservas_en_conflicto(){
+
+        Property__c prop = TestDataFactory.createProperty();
+        insert prop;
+        Room__c room = TestDataFactory.createRoomWithRate(prop.Id, 10);
+        insert room;
+
+        Reservation__c reservation = TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
+        insert reservation;
+
+        reservation.Check_In_Date__c = Date.newInstance(2026, 8, 12);
+        reservation.Check_Out_Date__c = Date.newInstance(2026, 8, 17);
+
+        Test.startTest();
+        DmlException error;
+        try {
+            update reservation;
+        } catch (DmlException e) {
+            error = e;
+        }
+        Test.stopTest();
+
+        System.assertEquals(null, error, 'Editar una reserva desplazando sus propias fechas no debe compararse contra su propia versión anterior');
     }
 
-    private static Reservation__c buildReservation(Id roomId, Date checkIn, Date checkOut, String status) {
-        return new Reservation__c(
-            Room__c = roomId,
-            Check_In_Date__c = checkIn,
-            Check_Out_Date__c = checkOut,
-            Status__c = status,
-            Is_Demo__c = true
-        );
+    @IsTest
+    static void reserva_de_multiples_habitaciones(){
+
+        Property__c prop = TestDataFactory.createProperty();
+        insert prop;
+
+        Room__c room1 = TestDataFactory.createRoomWithRate(prop.Id, 10);
+        Room__c room2 = TestDataFactory.createRoomWithRate(prop.Id, 20);
+        Room__c room3 = TestDataFactory.createRoomWithRate(prop.Id, 30);
+        List<Room__c> lstRooms = new List<Room__c>{ room1, room2, room3 };
+        insert lstRooms;
+
+        List<Reservation__c> lstReservations = new List<Reservation__c>{
+            TestDataFactory.buildReservation(room1.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15)), // 5 noches x 10 = 50
+            TestDataFactory.buildReservation(room2.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 11)), // 1 noche x 20 = 20
+            TestDataFactory.buildReservation(room3.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 13))  // 3 noches x 30 = 90
+        };
+
+        Test.startTest();
+            insert lstReservations;
+        Test.stopTest();
+
+        Map<Id, Reservation__c> reservationByRoom = new Map<Id, Reservation__c>();
+        for (Reservation__c reservation : [SELECT Id, Room__c, Total_Amount__c FROM Reservation__c WHERE Room__c IN :new Set<Id>{ room1.Id, room2.Id, room3.Id }]) {
+            reservationByRoom.put(reservation.Room__c, reservation);
+        }
+
+        System.assertEquals(3, reservationByRoom.size(), 'Las 3 reservas en habitaciones distintas deben insertarse sin bloquearse entre sí');
+        System.assertEquals(50, reservationByRoom.get(room1.Id).Total_Amount__c, 'Room1: 5 noches x 10 = 50');
+        System.assertEquals(20, reservationByRoom.get(room2.Id).Total_Amount__c, 'Room2: 1 noche x 20 = 20');
+        System.assertEquals(90, reservationByRoom.get(room3.Id).Total_Amount__c, 'Room3: 3 noches x 30 = 90');
     }
 
     // ── Casos negativos: variantes de solapamiento ──────────────────────────
 
     @isTest
     private static void no_puede_crear_reserva_por_que_se_solapa_con_fecha_de_otra_reserva() {
-        Property__c prop = createProperty();
+        Property__c prop = TestDataFactory.createProperty();
         insert prop;
-        Room__c room = createRoom(prop.Id);
+        Room__c room = TestDataFactory.createRoom(prop.Id);
         insert room;
-        insert buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
+        insert TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
 
-        Reservation__c overlapping = buildReservation(room.Id, Date.newInstance(2026, 8, 12), Date.newInstance(2026, 8, 18));
+        Reservation__c overlapping = TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 12), Date.newInstance(2026, 8, 18));
 
         Test.startTest();
         DmlException error = insertAndCaptureError(overlapping);
@@ -44,13 +140,13 @@ private class ReservationTest {
 
     @isTest
     private static void no_puede_crear_reserva_si_queda_completamente_dentro_de_otra() {
-        Property__c prop = createProperty();
+        Property__c prop = TestDataFactory.createProperty();
         insert prop;
-        Room__c room = createRoom(prop.Id);
+        Room__c room = TestDataFactory.createRoom(prop.Id);
         insert room;
-        insert buildReservation(room.Id, Date.newInstance(2026, 8, 1), Date.newInstance(2026, 8, 20));
+        insert TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 1), Date.newInstance(2026, 8, 20));
 
-        Reservation__c nested = buildReservation(room.Id, Date.newInstance(2026, 8, 5), Date.newInstance(2026, 8, 10));
+        Reservation__c nested = TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 5), Date.newInstance(2026, 8, 10));
 
         Test.startTest();
         DmlException error = insertAndCaptureError(nested);
@@ -61,13 +157,13 @@ private class ReservationTest {
 
     @isTest
     private static void no_puede_crear_reserva_si_envuelve_completamente_a_otra() {
-        Property__c prop = createProperty();
+        Property__c prop = TestDataFactory.createProperty();
         insert prop;
-        Room__c room = createRoom(prop.Id);
+        Room__c room = TestDataFactory.createRoom(prop.Id);
         insert room;
-        insert buildReservation(room.Id, Date.newInstance(2026, 8, 5), Date.newInstance(2026, 8, 10));
+        insert TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 5), Date.newInstance(2026, 8, 10));
 
-        Reservation__c enclosing = buildReservation(room.Id, Date.newInstance(2026, 8, 1), Date.newInstance(2026, 8, 20));
+        Reservation__c enclosing = TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 1), Date.newInstance(2026, 8, 20));
 
         Test.startTest();
         DmlException error = insertAndCaptureError(enclosing);
@@ -78,13 +174,13 @@ private class ReservationTest {
 
     @isTest
     private static void no_puede_crear_reserva_si_se_solapa_al_inicio() {
-        Property__c prop = createProperty();
+        Property__c prop = TestDataFactory.createProperty();
         insert prop;
-        Room__c room = createRoom(prop.Id);
+        Room__c room = TestDataFactory.createRoom(prop.Id);
         insert room;
-        insert buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
+        insert TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
 
-        Reservation__c overlapsStart = buildReservation(room.Id, Date.newInstance(2026, 8, 5), Date.newInstance(2026, 8, 12));
+        Reservation__c overlapsStart = TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 5), Date.newInstance(2026, 8, 12));
 
         Test.startTest();
         DmlException error = insertAndCaptureError(overlapsStart);
@@ -95,13 +191,13 @@ private class ReservationTest {
 
     @isTest
     private static void no_puede_crear_reserva_si_se_solapa_al_final() {
-        Property__c prop = createProperty();
+        Property__c prop = TestDataFactory.createProperty();
         insert prop;
-        Room__c room = createRoom(prop.Id);
+        Room__c room = TestDataFactory.createRoom(prop.Id);
         insert room;
-        insert buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
+        insert TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
 
-        Reservation__c overlapsEnd = buildReservation(room.Id, Date.newInstance(2026, 8, 13), Date.newInstance(2026, 8, 20));
+        Reservation__c overlapsEnd = TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 13), Date.newInstance(2026, 8, 20));
 
         Test.startTest();
         DmlException error = insertAndCaptureError(overlapsEnd);
@@ -112,13 +208,13 @@ private class ReservationTest {
 
     @isTest
     private static void no_puede_crear_reserva_con_las_mismas_fechas_exactas() {
-        Property__c prop = createProperty();
+        Property__c prop = TestDataFactory.createProperty();
         insert prop;
-        Room__c room = createRoom(prop.Id);
+        Room__c room = TestDataFactory.createRoom(prop.Id);
         insert room;
-        insert buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
+        insert TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
 
-        Reservation__c sameDates = buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
+        Reservation__c sameDates = TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
 
         Test.startTest();
         DmlException error = insertAndCaptureError(sameDates);
@@ -129,13 +225,13 @@ private class ReservationTest {
 
     @isTest
     private static void no_puede_editar_reserva_para_que_quede_solapada_con_otra() {
-        Property__c prop = createProperty();
+        Property__c prop = TestDataFactory.createProperty();
         insert prop;
-        Room__c room = createRoom(prop.Id);
+        Room__c room = TestDataFactory.createRoom(prop.Id);
         insert room;
-        insert buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
+        insert TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
 
-        Reservation__c toEdit = buildReservation(room.Id, Date.newInstance(2026, 9, 1), Date.newInstance(2026, 9, 5));
+        Reservation__c toEdit = TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 9, 1), Date.newInstance(2026, 9, 5));
         insert toEdit;
         toEdit.Check_In_Date__c = Date.newInstance(2026, 8, 12);
         toEdit.Check_Out_Date__c = Date.newInstance(2026, 8, 18);
@@ -156,13 +252,13 @@ private class ReservationTest {
 
     @isTest
     private static void puede_crear_reserva_completamente_antes_de_otra() {
-        Property__c prop = createProperty();
+        Property__c prop = TestDataFactory.createProperty();
         insert prop;
-        Room__c room = createRoom(prop.Id);
+        Room__c room = TestDataFactory.createRoom(prop.Id);
         insert room;
-        insert buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
+        insert TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
 
-        Reservation__c before = buildReservation(room.Id, Date.newInstance(2026, 7, 1), Date.newInstance(2026, 7, 5));
+        Reservation__c before = TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 7, 1), Date.newInstance(2026, 7, 5));
 
         Test.startTest();
         DmlException error = insertAndCaptureError(before);
@@ -173,13 +269,13 @@ private class ReservationTest {
 
     @isTest
     private static void puede_crear_reserva_completamente_despues_de_otra() {
-        Property__c prop = createProperty();
+        Property__c prop = TestDataFactory.createProperty();
         insert prop;
-        Room__c room = createRoom(prop.Id);
+        Room__c room = TestDataFactory.createRoom(prop.Id);
         insert room;
-        insert buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
+        insert TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
 
-        Reservation__c after = buildReservation(room.Id, Date.newInstance(2026, 9, 1), Date.newInstance(2026, 9, 5));
+        Reservation__c after = TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 9, 1), Date.newInstance(2026, 9, 5));
 
         Test.startTest();
         DmlException error = insertAndCaptureError(after);
@@ -190,14 +286,14 @@ private class ReservationTest {
 
     @isTest
     private static void puede_crear_reserva_en_otra_habitacion_con_mismas_fechas() {
-        Property__c prop = createProperty();
+        Property__c prop = TestDataFactory.createProperty();
         insert prop;
-        Room__c room1 = createRoom(prop.Id);
-        Room__c room2 = createRoom(prop.Id);
+        Room__c room1 = TestDataFactory.createRoom(prop.Id);
+        Room__c room2 = TestDataFactory.createRoom(prop.Id);
         insert new List<Room__c>{ room1, room2 };
-        insert buildReservation(room1.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
+        insert TestDataFactory.buildReservation(room1.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
 
-        Reservation__c sameDatesOtherRoom = buildReservation(room2.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
+        Reservation__c sameDatesOtherRoom = TestDataFactory.buildReservation(room2.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
 
         Test.startTest();
         DmlException error = insertAndCaptureError(sameDatesOtherRoom);
@@ -208,11 +304,11 @@ private class ReservationTest {
 
     @isTest
     private static void puede_editar_reserva_sin_cambiar_fechas_sin_disparar_falso_positivo() {
-        Property__c prop = createProperty();
+        Property__c prop = TestDataFactory.createProperty();
         insert prop;
-        Room__c room = createRoom(prop.Id);
+        Room__c room = TestDataFactory.createRoom(prop.Id);
         insert room;
-        Reservation__c reservation = buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
+        Reservation__c reservation = TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
         insert reservation;
         reservation.Status__c = 'Checked In';
 
@@ -238,13 +334,13 @@ private class ReservationTest {
      */
     @isTest
     private static void puede_crear_reserva_cuyo_checkin_coincide_con_checkout_de_otra() {
-        Property__c prop = createProperty();
+        Property__c prop = TestDataFactory.createProperty();
         insert prop;
-        Room__c room = createRoom(prop.Id);
+        Room__c room = TestDataFactory.createRoom(prop.Id);
         insert room;
-        insert buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
+        insert TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15));
 
-        Reservation__c backToBack = buildReservation(room.Id, Date.newInstance(2026, 8, 15), Date.newInstance(2026, 8, 20));
+        Reservation__c backToBack = TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 15), Date.newInstance(2026, 8, 20));
 
         Test.startTest();
         DmlException error = insertAndCaptureError(backToBack);
@@ -255,13 +351,13 @@ private class ReservationTest {
 
     @isTest
     private static void no_bloquea_solapamiento_si_la_reserva_existente_esta_cancelled() {
-        Property__c prop = createProperty();
+        Property__c prop = TestDataFactory.createProperty();
         insert prop;
-        Room__c room = createRoom(prop.Id);
+        Room__c room = TestDataFactory.createRoom(prop.Id);
         insert room;
-        insert buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15), 'Cancelled');
+        insert TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15), 'Cancelled');
 
-        Reservation__c overlapping = buildReservation(room.Id, Date.newInstance(2026, 8, 12), Date.newInstance(2026, 8, 18));
+        Reservation__c overlapping = TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 12), Date.newInstance(2026, 8, 18));
 
         Test.startTest();
         DmlException error = insertAndCaptureError(overlapping);
@@ -274,16 +370,16 @@ private class ReservationTest {
 
     @isTest
     private static void permite_insertar_200_reservas_sin_solapamientos_en_bulk() {
-        Property__c prop = createProperty();
+        Property__c prop = TestDataFactory.createProperty();
         insert prop;
-        Room__c room = createRoom(prop.Id);
+        Room__c room = TestDataFactory.createRoom(prop.Id);
         insert room;
 
         List<Reservation__c> reservations = new List<Reservation__c>();
         for (Integer i = 0; i < 200; i++) {
             Date checkIn = Date.newInstance(2026, 1, 1).addDays(i * 2);
             Date checkOut = checkIn.addDays(1);
-            reservations.add(buildReservation(room.Id, checkIn, checkOut));
+            reservations.add(TestDataFactory.buildReservation(room.Id, checkIn, checkOut));
         }
 
         Test.startTest();
@@ -295,14 +391,14 @@ private class ReservationTest {
 
     @isTest
     private static void bloquea_solapamientos_entre_registros_del_mismo_batch() {
-        Property__c prop = createProperty();
+        Property__c prop = TestDataFactory.createProperty();
         insert prop;
-        Room__c room = createRoom(prop.Id);
+        Room__c room = TestDataFactory.createRoom(prop.Id);
         insert room;
 
         List<Reservation__c> reservations = new List<Reservation__c>{
-            buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15)),
-            buildReservation(room.Id, Date.newInstance(2026, 8, 12), Date.newInstance(2026, 8, 18))
+            TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 10), Date.newInstance(2026, 8, 15)),
+            TestDataFactory.buildReservation(room.Id, Date.newInstance(2026, 8, 12), Date.newInstance(2026, 8, 18))
         };
 
         Test.startTest();

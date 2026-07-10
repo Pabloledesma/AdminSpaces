@@ -26,7 +26,7 @@ Marca cada historia cuando la completes. El orden importa: cada hito construye s
 > Aquí vive el trigger que ya discutimos, más varias piezas asíncronas para practicar distintos patrones de Apex.
 
 - [X] **Historia 2.1:** Como administrador de la propiedad, quiero que el sistema impida crear una reserva si las fechas se solapan con otra reserva existente para la misma habitación, para evitar overbooking. *(la que ya empezamos)*
-- [ ] **Historia 2.2:** Como administrador, quiero que el campo `Total_Amount__c` de una reserva se calcule automáticamente al crearla o modificarla, para no depender de cálculo manual.
+- [X] **Historia 2.2:** Como administrador, quiero que el campo `Total_Amount__c` de una reserva se calcule automáticamente al crearla o modificarla, para no depender de cálculo manual.
 - [ ] **Historia 2.3:** Como administrador, quiero que las habitaciones cambien automáticamente a estado "Available" el día del checkout, para no tener que actualizarlas a mano.
 - [ ] **Historia 2.4:** Como administrador, quiero que se cree automáticamente una tarea de limpieza (`Maintenance_Task__c`) la noche antes de cada checkout, para no olvidar coordinar al personal.
 - [ ] **Historia 2.5:** Como huésped, quiero recibir una notificación (o que se procese algo en segundo plano) cuando mi reserva se confirma, para practicar Queueable Apex.
