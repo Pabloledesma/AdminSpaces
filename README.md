@@ -50,6 +50,8 @@ ReservationTriggerHandler   (orquesta antes de insert/update, sin lógica de neg
 
 **`RoomCheckoutScheduler`** (Schedulable, pensado para correr una vez al día): libera la habitación de las reservas ya marcadas `Checked Out` el día de su checkout, y extiende un día el `Check_Out_Date__c` de las que no hicieron checkout (no-show) — la noche extra se recalcula sola vía el trigger existente. El conflicto entre una extensión y la reserva del siguiente huésped queda como trabajo pendiente (ver `docs/property-manager-roadmap.md`).
 
+**`ReservationFlow`** (Record-Triggered Flow con Scheduled Path): crea una `Maintenance_Task__c` de limpieza un día antes de cada checkout. Se resolvió con Flow en vez de Apex porque es una automatización puramente basada en fecha, sin necesidad del batch/query propio de un Schedulable — la lógica de solapamiento y precio (Historias 2.1/2.2) se mantuvo en Apex a propósito, ya que un Flow *before-save* no puede comparar registros entre sí dentro del mismo batch de inserción.
+
 ## Testing
 
 ```bash
@@ -64,7 +66,7 @@ Estado actual por hito (detalle completo con historias en [`docs/property-manage
 
 - ✅ **Hito 0** — Modelo de datos
 - 🟡 **Hito 1** — Seguridad y permisos (Permission Sets listos; Guest User pendiente del sitio Experience Cloud)
-- 🟡 **Hito 2** — Lógica de negocio en Apex (no overbooking, cálculo de total y liberación/no-show de habitaciones listos; quedan tareas de limpieza automáticas y notificaciones)
+- 🟡 **Hito 2** — Lógica de negocio en Apex y Flow (no overbooking, cálculo de total, liberación/no-show de habitaciones y tarea de limpieza automática listos; queda la notificación por Queueable Apex)
 - ⬜ **Hito 3** — Componentes LWC
 - ⬜ **Hito 4** — Testing (Jest para LWC)
 - ⬜ **Hito 5** — Sitio Experience Cloud
