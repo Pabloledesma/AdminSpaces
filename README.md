@@ -68,8 +68,9 @@ Estado actual por hito (detalle completo con historias en [`docs/property-manage
 - 🟡 **Hito 1** — Seguridad y permisos (Permission Sets listos; Guest User se resuelve en el Hito 3)
 - 🟡 **Hito 2** — Lógica de negocio en Apex y Flow (no overbooking, cálculo de total, liberación/no-show de habitaciones y tarea de limpieza automática listos)
 - ⬜ **Hito 3** — Sitio Experience Cloud (adelantado a propósito, antes que los LWC — así cada componente se prueba en vivo apenas se construye)
-- ⬜ **Hito 4** — Componentes LWC (cada historia incluye sus propios tests Jest, sin fase de testing separada)
-- ⬜ **Hito 5** — Agentforce
+- ⬜ **Hito 4** — Portal de autoservicio del huésped (login autenticado vía Customer Community; sharing por registro individual, distinto del Guest User anónimo del Hito 3)
+- ⬜ **Hito 5** — Componentes LWC (cada historia incluye sus propios tests Jest, sin fase de testing separada)
+- ⬜ **Hito 6** — Agentforce
 
 ## Desarrollo asistido por IA
 

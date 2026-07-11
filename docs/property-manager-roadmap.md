@@ -43,22 +43,34 @@ Marca cada historia cuando la completes. El orden importa: cada hito construye s
 
 ---
 
-## Hito 4 — Componentes LWC
+## Hito 4 — Portal de autoservicio del huésped (Experience Cloud autenticado)
 
-> Cada historia aquí debería consumir algo de Apex ya construido en el Hito 2. Como el sitio del Hito 3 ya existe, cada componente se despliega y se prueba ahí en vivo apenas está listo — no se espera a tener todos los componentes para integrar. Por la misma razón de TDD que ya veníamos aplicando en Apex, **cada historia incluye sus propios tests Jest como parte de su criterio de aceptación**, no como fase separada al final.
+> Distinto de la Historia 3.2: ahí el Guest User anónimo veía solo demo data vía Sharing Rules por criterio, igual para todos los visitantes. Acá el huésped se loguea con una licencia Customer Community ligada a su `Contact`, y el modelo de seguridad cambia de raíz: cada huésped autenticado debe ver **únicamente sus propios registros**, no los de otros huéspedes — no alcanza con una Sharing Rule genérica, hace falta sharing a nivel de registro individual (ownership/criteria por `Guest__c = $User.ContactId` o similar). No confundir con el personal de limpieza, que ya tiene resuelto su acceso como usuario interno vía el Permission Set `Maintenance_Staff` de la Historia 1.2 — no necesita loguearse en este sitio.
 
-- [ ] **Historia 4.1:** Como administrador, quiero un dashboard que muestre ocupación actual, ingresos del mes y tareas pendientes de una propiedad, para tener visibilidad rápida.
-- [ ] **Historia 4.2:** Como administrador, quiero seleccionar una habitación y un rango de fechas y que el sistema me confirme si está disponible antes de crear la reserva, para practicar llamada Apex imperativa.
-- [ ] **Historia 4.3:** Como administrador, quiero un formulario para crear una nueva reserva con validación en tiempo real, para agilizar el proceso de check-in.
-- [ ] **Historia 4.4:** Como encargado de mantenimiento, quiero un tablero tipo kanban de `Maintenance_Task__c` donde pueda mover tareas entre estados, para gestionar mi trabajo visualmente.
-- [ ] **Historia 4.5:** Como administrador, quiero un gráfico de gastos agrupados por categoría, para entender en qué se está invirtiendo el dinero de la renovación.
+- [ ] **Historia 4.1:** Como huésped, quiero poder registrarme e iniciar sesión en el sitio, para hacer seguimiento de mi reserva sin depender de que el administrador me la comunique manualmente.
+- [ ] **Historia 4.2:** Como huésped autenticado, quiero ver el detalle de mi propia reserva (habitación, fechas, monto total, estado), para no tener que llamar a la propiedad para consultarlo.
+- [ ] **Historia 4.3:** Como huésped autenticado, quiero poder modificar las fechas de mi reserva (respetando la misma regla de no solapamiento de la Historia 2.1), para ajustar mi estadía sin intervención manual.
+- [ ] **Historia 4.4:** Como huésped autenticado, quiero poder cancelar mi reserva, para liberar la habitación si cambian mis planes.
+- [ ] **Historia 4.5 (seguridad crítica):** Como administrador de seguridad, quiero configurar el sharing para que un huésped autenticado solo pueda ver/editar sus propias reservas y no las de otros huéspedes, aplicando el principio de menor privilegio también entre usuarios externos autenticados (no solo entre Guest User y usuario interno).
 
 ---
 
-## Hito 5 — Agentforce
+## Hito 5 — Componentes LWC
 
-- [ ] **Historia 5.1:** Como huésped potencial, quiero poder preguntarle a un agente si una habitación está disponible en ciertas fechas, para no tener que navegar la interfaz manualmente.
-- [ ] **Historia 5.2:** Como encargado de mantenimiento, quiero poder reportarle un problema a un agente en lenguaje natural y que este cree automáticamente el `Maintenance_Task__c` correspondiente, para agilizar el reporte de incidencias.
+> Cada historia aquí debería consumir algo de Apex ya construido en el Hito 2. Como el sitio del Hito 3 ya existe, cada componente se despliega y se prueba ahí en vivo apenas está listo — no se espera a tener todos los componentes para integrar. Por la misma razón de TDD que ya veníamos aplicando en Apex, **cada historia incluye sus propios tests Jest como parte de su criterio de aceptación**, no como fase separada al final.
+
+- [ ] **Historia 5.1:** Como administrador, quiero un dashboard que muestre ocupación actual, ingresos del mes y tareas pendientes de una propiedad, para tener visibilidad rápida.
+- [ ] **Historia 5.2:** Como administrador, quiero seleccionar una habitación y un rango de fechas y que el sistema me confirme si está disponible antes de crear la reserva, para practicar llamada Apex imperativa.
+- [ ] **Historia 5.3:** Como administrador, quiero un formulario para crear una nueva reserva con validación en tiempo real, para agilizar el proceso de check-in.
+- [ ] **Historia 5.4:** Como encargado de mantenimiento, quiero un tablero tipo kanban de `Maintenance_Task__c` donde pueda mover tareas entre estados, para gestionar mi trabajo visualmente.
+- [ ] **Historia 5.5:** Como administrador, quiero un gráfico de gastos agrupados por categoría, para entender en qué se está invirtiendo el dinero de la renovación.
+
+---
+
+## Hito 6 — Agentforce
+
+- [ ] **Historia 6.1:** Como huésped potencial, quiero poder preguntarle a un agente si una habitación está disponible en ciertas fechas, para no tener que navegar la interfaz manualmente.
+- [ ] **Historia 6.2:** Como encargado de mantenimiento, quiero poder reportarle un problema a un agente en lenguaje natural y que este cree automáticamente el `Maintenance_Task__c` correspondiente, para agilizar el reporte de incidencias.
 
 ---
 
@@ -66,6 +78,7 @@ Marca cada historia cuando la completes. El orden importa: cada hito construye s
 
 *(usa este espacio para anotar decisiones importantes que tomes durante la implementación, útil para cuando armes el case study del portafolio)*
 
+- **Hito 4 nuevo — Portal de autoservicio del huésped (2026-07-11):** al configurar el Guest User de la Historia 3.2, surgió la pregunta de si hacía falta login para huéspedes y personal de limpieza. Conclusión: notificar al huésped (`Guest__c` ya apunta a un `Contact` con email) y asignar tareas al personal (usuario interno con `Maintenance_Staff`) **no** requieren login en el sitio — ya estaban resueltos. Lo que sí es una feature real y nueva es que el huésped se loguee para autogestionar su propia reserva (ambición tipo "Airbnb"); se agrega como Hito 4 propio en vez de colarlo dentro de la 3.2, porque el modelo de seguridad es distinto (sharing por registro individual entre usuarios externos autenticados, no una Sharing Rule genérica para todo Guest User).
 - **Reorganización de hitos (2026-07-11):** el Hito 5 (Sitio Experience Cloud) pasó a ser el Hito 3, y el antiguo Hito 3 (LWC) pasó a ser el Hito 4 — razón: con el sitio ya armado, cada componente LWC se prueba en vivo apenas se construye, en vez de integrar todo al final. Se eliminó el Hito de Testing como fase separada: la Historia 4.1 original (tests Apex del trigger) ya estaba cumplida retroactivamente por el TDD del Hito 2; la 4.2 (Jest para LWC) se folded como criterio de aceptación de cada historia del nuevo Hito 4, no como fase aparte. La antigua Historia 5.3 ("interactuar con los LWC del Hito 3 dentro del sitio") se disolvió en esa misma expectativa por-historia del Hito 4. La Historia 1.3 y la 5.2 originales eran duplicadas (mismo objetivo de Guest User) — se fusionaron en la Historia 3.2.
 - **Regla de solapamiento (Historia 2.1):** dos reservas de la misma habitación se solapan si `nueva.CheckIn < existente.CheckOut AND existente.CheckIn < nueva.CheckOut` (comparación estricta). Esto implica que el mismo día puede ser checkout de una reserva y checkin de otra sin considerarse solapamiento (regla común en hotelería). Solo bloquean reservas en estado `Pending`, `Confirmed` o `Checked In`; `Cancelled` nunca bloquea.
 - **Arquitectura del trigger de `Reservation__c`:** `ReservationTriggerHandler` solo orquesta; el SOQL vive en `ReservationSelector`/`RoomSelector` (DIP), la regla de solapamiento en `ReservationOverlapValidator` (SRP/OCP) y el cálculo de precio en `ReservationPricingCalculator` (SRP) — reutilizados tanto en `OnBeforeInsert` como en `OnBeforeUpdate`.
