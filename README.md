@@ -65,12 +65,11 @@ La suite de `ReservationTest` cubre casos positivos, negativos (todas las varian
 Estado actual por hito (detalle completo con historias en [`docs/property-manager-roadmap.md`](docs/property-manager-roadmap.md)):
 
 - ✅ **Hito 0** — Modelo de datos
-- 🟡 **Hito 1** — Seguridad y permisos (Permission Sets listos; Guest User pendiente del sitio Experience Cloud)
-- 🟡 **Hito 2** — Lógica de negocio en Apex y Flow (no overbooking, cálculo de total, liberación/no-show de habitaciones y tarea de limpieza automática listos; queda la notificación por Queueable Apex)
-- ⬜ **Hito 3** — Componentes LWC
-- ⬜ **Hito 4** — Testing (Jest para LWC)
-- ⬜ **Hito 5** — Sitio Experience Cloud
-- ⬜ **Hito 6** — Agentforce
+- 🟡 **Hito 1** — Seguridad y permisos (Permission Sets listos; Guest User se resuelve en el Hito 3)
+- 🟡 **Hito 2** — Lógica de negocio en Apex y Flow (no overbooking, cálculo de total, liberación/no-show de habitaciones y tarea de limpieza automática listos)
+- ⬜ **Hito 3** — Sitio Experience Cloud (adelantado a propósito, antes que los LWC — así cada componente se prueba en vivo apenas se construye)
+- ⬜ **Hito 4** — Componentes LWC (cada historia incluye sus propios tests Jest, sin fase de testing separada)
+- ⬜ **Hito 5** — Agentforce
 
 ## Desarrollo asistido por IA
 
