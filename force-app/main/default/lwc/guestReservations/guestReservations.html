@@ -1,0 +1,45 @@
+<template>
+  <div class="slds-p-around_medium">
+    <template lwc:if={error}>
+      <div data-id="error-state" class="slds-text-color_error">
+        No pudimos cargar tu reserva. Intentá de nuevo más tarde.
+      </div>
+    </template>
+    <template lwc:elseif={isEmpty}>
+      <div data-id="empty-state">No tenés reservas registradas todavía.</div>
+    </template>
+    <template lwc:elseif={hasReservations}>
+      <template for:each={reservations} for:item="reservation">
+        <lightning-card
+          key={reservation.Id}
+          data-id="reservation-card"
+          title={reservation.Room__r.Name}
+        >
+          <div class="slds-p-horizontal_medium">
+            <p>Tipo: {reservation.Room__r.Room_Type__c}</p>
+            <p>
+              Check-in:
+              <lightning-formatted-date-time
+                value={reservation.Check_In_Date__c}
+              ></lightning-formatted-date-time>
+            </p>
+            <p>
+              Check-out:
+              <lightning-formatted-date-time
+                value={reservation.Check_Out_Date__c}
+              ></lightning-formatted-date-time>
+            </p>
+            <p>
+              Total:
+              <lightning-formatted-number
+                value={reservation.Total_Amount__c}
+                format-style="currency"
+              ></lightning-formatted-number>
+            </p>
+            <p>Estado: {reservation.Status__c}</p>
+          </div>
+        </lightning-card>
+      </template>
+    </template>
+  </div>
+</template>
