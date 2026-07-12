@@ -99,4 +99,35 @@ public inherited sharing class ReservationSelector {
       ORDER BY Check_In_Date__c DESC
     ];
   }
+
+  /**
+   * Selects a single reservation only if it belongs to the given guest Contact.
+   * Used to re-verify ownership before an authenticated guest edits their own
+   * reservation (Historia 4.3): the reservationId alone is client-supplied and
+   * must never be trusted on its own — pairing it with guestContactId in the
+   * WHERE clause is what stops a guest from editing another guest's record.
+   * Returns an empty list both when the reservation doesn't exist and when it
+   * exists but belongs to someone else, so callers can't distinguish the two
+   * cases from the result alone.
+   * @param guestContactId Contact Id of the running user
+   * @param reservationId Id of the reservation to look up
+   * @return Single-element list with the reservation if it exists and belongs
+   *         to guestContactId, otherwise an empty list
+   */
+  public static List<Reservation__c> getByGuestAndReservationId(
+    Id guestContactId,
+    Id reservationId
+  ) {
+    if (guestContactId == null || reservationId == null) {
+      return new List<Reservation__c>();
+    }
+
+    return [
+      SELECT Id, Check_In_Date__c, Check_Out_Date__c
+      FROM Reservation__c
+      WHERE Id = :reservationId AND Guest__c = :guestContactId
+      WITH SECURITY_ENFORCED
+      ORDER BY Check_In_Date__c DESC
+    ];
+  }
 }

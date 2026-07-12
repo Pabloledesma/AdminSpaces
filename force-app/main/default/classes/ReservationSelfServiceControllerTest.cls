@@ -62,6 +62,57 @@ private class ReservationSelfServiceControllerTest {
     insert guestUser;
   }
 
+  @IsTest
+  static void actualiza_las_fechas_de_la_reserva() {
+    User guestUser = [
+      SELECT Id
+      FROM User
+      WHERE Email = 'guestone@adminspaces.test.com'
+    ];
+    Contact guestOne = [
+      SELECT Id, Name
+      FROM contact
+      WHERE Name LIKE 'GuestOne%'
+    ];
+    List<Reservation__c> reservation = ReservationSelector.getByGuestContactId(
+      guestOne.Id
+    );
+
+    PermissionSet huespedPermSet = [
+      SELECT Id
+      FROM PermissionSet
+      WHERE Name = 'Huesped'
+    ];
+    insert new PermissionSetAssignment(
+      AssigneeId = guestUser.Id,
+      PermissionSetId = huespedPermSet.Id
+    );
+
+    Test.startTest();
+    System.runAs(guestUser) {
+      ReservationSelfServiceController.updateMyReservationDates(
+        reservation[0].Id,
+        Date.today().addDays(11),
+        Date.today().addDays(13)
+      );
+    }
+    Test.stopTest();
+
+    List<Reservation__c> reservationUpdated = ReservationSelector.getByGuestContactId(
+      guestOne.Id
+    );
+    System.assertNotEquals(
+      reservation[0].Check_In_Date__c,
+      reservationUpdated[0].Check_In_Date__c,
+      'La fecha de checkin no fue actualizada'
+    );
+    System.assertNotEquals(
+      reservation[0].Check_Out_Date__c,
+      reservationUpdated[0].Check_Out_Date__c,
+      'La fecha de checkout no fue actualizada'
+    );
+  }
+
   @isTest
   static void getMyReservations_returnsOnlyRunningGuestsOwnReservation() {
     Reservation__c expected = [
@@ -72,7 +123,12 @@ private class ReservationSelfServiceControllerTest {
     User guestUser = [
       SELECT Id
       FROM User
-      WHERE ContactId IN (SELECT Id FROM Contact WHERE LastName = 'GuestOne')
+      WHERE
+        ContactId IN (
+          SELECT Id
+          FROM Contact
+          WHERE LastName = 'GuestOne'
+        )
     ];
 
     List<Reservation__c> results;
