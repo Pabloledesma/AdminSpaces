@@ -64,6 +64,125 @@ describe("guardar fechas de la reserva", () => {
 
     expect(refreshApex).toHaveBeenCalledTimes(1);
   });
+
+  it("deshabilita el botón mientras se está guardando", async () => {
+    updateMyReservationDates.mockReturnValue(new Promise(() => {})); // nunca se resuelve
+    const RESERVATION_ID = MOCK_RESERVATIONS[0].Id;
+    const element = createElement("c-guest-reservations", {
+      is: GuestReservations
+    });
+    document.body.appendChild(element);
+    getMyReservationsAdapter.emit(MOCK_RESERVATIONS);
+    await Promise.resolve();
+
+    const saveButton = element.shadowRoot.querySelector(
+      `[data-reservation-id = "${RESERVATION_ID}"][data-field="saveButton"]`
+    );
+    saveButton.dispatchEvent(new CustomEvent("click"));
+    await Promise.resolve(); //deja que arranque el handleSave y llegue al primer await
+
+    expect(saveButton.disabled).toBe(true);
+  });
+
+  it("muestra el mensaje de exito y deshabilita el botón al guardar con éxito", async () => {
+    updateMyReservationDates.mockResolvedValue();
+    const RESERVATION_ID = MOCK_RESERVATIONS[0].Id;
+
+    const element = createElement("c-guest-reservations", {
+      is: GuestReservations
+    });
+    document.body.appendChild(element);
+    getMyReservationsAdapter.emit(MOCK_RESERVATIONS);
+    await Promise.resolve();
+
+    const saveButton = element.shadowRoot.querySelector(
+      `[data-reservation-id = "${RESERVATION_ID}"][data-field="saveButton"]`
+    );
+    saveButton.dispatchEvent(new CustomEvent("click"));
+
+    // varios ticks: uno por cada await encadenado dentro de handleSave
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const successMessage = element.shadowRoot.querySelector(
+      '[data-id="save-success"]'
+    );
+    expect(successMessage).not.toBeNull();
+    expect(saveButton.disabled).toBe(true);
+  });
+
+  it("vuelve a habilitarse si el huesped edita de nuevo", async () => {
+    updateMyReservationDates.mockResolvedValue();
+    const RESERVATION_ID = MOCK_RESERVATIONS[0].Id;
+
+    const element = createElement("c-guest-reservations", {
+      is: GuestReservations
+    });
+    document.body.appendChild(element);
+    getMyReservationsAdapter.emit(MOCK_RESERVATIONS);
+    await Promise.resolve();
+
+    const saveButton = element.shadowRoot.querySelector(
+      `[data-reservation-id = "${RESERVATION_ID}"][data-field="saveButton"]`
+    );
+    saveButton.dispatchEvent(new CustomEvent("click"));
+
+    // varios ticks: uno por cada await encadenado dentro de handleSave
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const successMessage = element.shadowRoot.querySelector(
+      '[data-id="save-success"]'
+    );
+    expect(successMessage).not.toBeNull();
+    expect(saveButton.disabled).toBe(true);
+
+    const checkinInput = element.shadowRoot.querySelector(
+      `[data-reservation-id="${RESERVATION_ID}"][data-field="checkin"]`
+    );
+    checkinInput.value = "2026-08-02";
+    checkinInput.dispatchEvent(new CustomEvent("change"));
+    await Promise.resolve();
+
+    expect(
+      element.shadowRoot.querySelector('[data-id="save-success"]')
+    ).toBeNull();
+    expect(saveButton.disabled).toBe(false);
+  });
+
+  it("muestra el mensaje de error si falla el guardado", async () => {
+    updateMyReservationDates.mockRejectedValue({
+      body: {
+        message:
+          "Las fechas se solapan con otra reserva existente para esta habitación."
+      }
+    });
+    const RESERVATION_ID = MOCK_RESERVATIONS[0].Id;
+
+    const element = createElement("c-guest-reservations", {
+      is: GuestReservations
+    });
+    document.body.appendChild(element);
+    getMyReservationsAdapter.emit(MOCK_RESERVATIONS);
+    await Promise.resolve();
+
+    const saveButton = element.shadowRoot.querySelector(
+      `[data-reservation-id="${RESERVATION_ID}"][data-field="saveButton"]`
+    );
+    saveButton.dispatchEvent(new CustomEvent("click"));
+
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const errorMessage = element.shadowRoot.querySelector(
+      '[data-id="save-error"]'
+    );
+    expect(errorMessage).not.toBeNull();
+    expect(errorMessage.textContent).toContain("se solapan");
+  });
 });
 
 describe("c-guest-reservations", () => {

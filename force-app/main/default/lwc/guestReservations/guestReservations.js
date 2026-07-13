@@ -8,6 +8,9 @@ export default class GuestReservations extends LightningElement {
   error;
   wiredResult;
   pendingChanges = {};
+  saveErrors = {};
+  savingReservationId;
+  savedReservationId;
 
   @wire(getMyReservations)
   wiredReservations(result) {
@@ -22,6 +25,23 @@ export default class GuestReservations extends LightningElement {
     }
   }
 
+  get reservationsView() {
+    if (!this.reservations) {
+      return [];
+    }
+    return this.reservations.map((reservation) => {
+      const isSaving = this.savingReservationId === reservation.Id;
+      const justSaved = this.savedReservationId === reservation.Id;
+      return {
+        ...reservation,
+        isSaving,
+        justSaved,
+        saveDisabled: isSaving || justSaved,
+        saveError: this.saveErrors[reservation.Id]
+      };
+    });
+  }
+
   get hasReservations() {
     return this.reservations && this.reservations.length > 0;
   }
@@ -31,35 +51,47 @@ export default class GuestReservations extends LightningElement {
   }
 
   handleCheckoutChange(event) {
-    const id = event.target.dataset.reservationId;
-    this.pendingChanges[id] = {
-      ...this.pendingChanges[id],
-      checkout: event.target.value
-    };
+    this.updatePendingChange(event, "checkout");
   }
 
   handleCheckinChange(event) {
+    this.updatePendingChange(event, "checkin");
+  }
+
+  updatePendingChange(event, field) {
     const id = event.target.dataset.reservationId;
     this.pendingChanges[id] = {
       ...this.pendingChanges[id],
-      checkin: event.target.value
+      [field]: event.target.value
     };
+    if (this.savedReservationId === id) {
+      this.savedReservationId = undefined;
+    }
   }
 
   async handleSave(event) {
     const reservationId = event.target.dataset.reservationId;
     const changes = this.pendingChanges[reservationId] || {};
 
+    this.savingReservationId = reservationId;
+    delete this.saveErrors[reservationId];
+
     try {
-      this.saveError = undefined;
       await updateMyReservationDates({
         reservationId,
         newCheckin: changes.checkin ?? null,
         newCheckout: changes.checkout ?? null
       });
       await refreshApex(this.wiredResult);
+      this.savedReservationId = reservationId;
+      delete this.pendingChanges[reservationId];
     } catch (error) {
-      this.saveError = error.body?.message ?? "Ocurrió un error inesperado.";
+      this.saveErrors = {
+        ...this.saveErrors,
+        [reservationId]: error.body?.message ?? "Ocurrió un error inesperado."
+      };
+    } finally {
+      this.savingReservationId = undefined;
     }
   }
 }

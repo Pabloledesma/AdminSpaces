@@ -9,7 +9,7 @@
       <div data-id="empty-state">No tenés reservas registradas todavía.</div>
     </template>
     <template lwc:elseif={hasReservations}>
-      <template for:each={reservations} for:item="reservation">
+      <template for:each={reservationsView} for:item="reservation">
         <lightning-card
           key={reservation.Id}
           data-id="reservation-card"
@@ -50,7 +50,16 @@
               data-field="saveButton"
               onclick={handleSave}
               label="Guardar"
+              disabled={reservation.saveDisabled}
             ></lightning-button>
+            <template lwc:if={reservation.justSaved}>
+              <p data-id="save-success">Reserva actualizada correctamente.</p>
+            </template>
+            <template lwc:if={reservation.saveError}>
+              <p data-id="save-error" class="slds-text-color_error">
+                {reservation.saveError}
+              </p>
+            </template>
           </div>
         </lightning-card>
       </template>
