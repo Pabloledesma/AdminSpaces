@@ -19,15 +19,23 @@
             <p>Tipo: {reservation.Room__r.Room_Type__c}</p>
             <p>
               Check-in:
-              <lightning-formatted-date-time
+              <lightning-input
+                data-reservation-id={reservation.Id}
+                data-field="checkin"
+                type="date"
                 value={reservation.Check_In_Date__c}
-              ></lightning-formatted-date-time>
+                onchange={handleCheckinChange}
+              ></lightning-input>
             </p>
             <p>
               Check-out:
-              <lightning-formatted-date-time
+              <lightning-input
+                data-reservation-id={reservation.Id}
+                data-field="checkout"
+                type="date"
                 value={reservation.Check_Out_Date__c}
-              ></lightning-formatted-date-time>
+                onchange={handleCheckoutChange}
+              ></lightning-input>
             </p>
             <p>
               Total:
@@ -37,6 +45,12 @@
               ></lightning-formatted-number>
             </p>
             <p>Estado: {reservation.Status__c}</p>
+            <lightning-button
+              data-reservation-id={reservation.Id}
+              data-field="saveButton"
+              onclick={handleSave}
+              label="Guardar"
+            ></lightning-button>
           </div>
         </lightning-card>
       </template>

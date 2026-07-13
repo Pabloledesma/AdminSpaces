@@ -1,6 +1,16 @@
 import { createElement } from "lwc";
 import GuestReservations from "c/guestReservations";
 import getMyReservationsAdapter from "@salesforce/apex/ReservationSelfServiceController.getMyReservations";
+import updateMyReservationDates from "@salesforce/apex/ReservationSelfServiceController.updateMyReservationDates";
+import { refreshApex } from "@salesforce/apex";
+
+jest.mock(
+  "@salesforce/apex",
+  () => ({
+    refreshApex: jest.fn()
+  }),
+  { virtual: true }
+);
 
 const MOCK_RESERVATIONS = [
   {
@@ -12,6 +22,49 @@ const MOCK_RESERVATIONS = [
     Room__r: { Name: "R-0001", Room_Type__c: "Suite" }
   }
 ];
+
+describe("guardar fechas de la reserva", () => {
+  beforeEach(() => {
+    updateMyReservationDates.mockReset();
+  });
+
+  it("llama a updateReservationDates con los parámetros correctos", async () => {
+    const RESERVATION_ID = MOCK_RESERVATIONS[0].Id;
+    const element = createElement("c-guest-guestReservations", {
+      is: GuestReservations
+    });
+    document.body.appendChild(element);
+
+    getMyReservationsAdapter.emit(MOCK_RESERVATIONS);
+    await Promise.resolve();
+
+    const checkinInput = element.shadowRoot.querySelector(
+      `[data-reservation-id="${RESERVATION_ID}"][data-field="checkin"]`
+    );
+    checkinInput.value = "2026-08-01";
+    checkinInput.dispatchEvent(new CustomEvent("change"));
+
+    const checkoutInput = element.shadowRoot.querySelector(
+      `[data-reservation-id="${RESERVATION_ID}"][data-field="checkout"]`
+    );
+    checkoutInput.value = "2026-08-10";
+    checkoutInput.dispatchEvent(new CustomEvent("change"));
+
+    const saveButton = element.shadowRoot.querySelector(
+      `[data-reservation-id="${RESERVATION_ID}"][data-field="saveButton"]`
+    );
+    saveButton.dispatchEvent(new CustomEvent("click"));
+    await Promise.resolve();
+
+    expect(updateMyReservationDates).toHaveBeenCalledWith({
+      reservationId: RESERVATION_ID,
+      newCheckin: "2026-08-01",
+      newCheckout: "2026-08-10"
+    });
+
+    expect(refreshApex).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe("c-guest-reservations", () => {
   afterEach(() => {
