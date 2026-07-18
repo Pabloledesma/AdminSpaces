@@ -7,6 +7,14 @@
  * control in effect — it must never be replaced by a client-supplied Id.
  */
 public without sharing class ReservationSelfServiceController {
+  private static final Set<String> CANCELLABLE_STATUSES = new Set<String>{
+    'Pending',
+    'Confirmed'
+  };
+  // TODO (backlog): los estados cancelables están hardcodeados. Evaluar más
+  // adelante un Custom Metadata Type para que un admin los configure sin
+  // deploy (ver docs/property-manager-roadmap.md).
+
   @AuraEnabled(cacheable=true)
   public static List<Reservation__c> getMyReservations() {
     Id guestContactId = getContactId();
@@ -61,6 +69,52 @@ public without sharing class ReservationSelfServiceController {
       throw new AuraHandledException(
         'No tenés permiso para modificar esta reserva.'
       );
+    }
+
+    try {
+      update decision.getRecords();
+    } catch (DmlException e) {
+      throw new AuraHandledException(e.getDmlMessage(0));
+    }
+  }
+
+  @AuraEnabled
+  public static void cancelMyReservation(Id reservationId) {
+    Id guestContactId = getContactId();
+    List<Reservation__c> lstReservation = ReservationSelector.getByGuestAndReservationId(
+      guestContactId,
+      reservationId
+    );
+
+    if (lstReservation.isEmpty()) {
+      String message = 'No se encontró la reserva';
+      AuraHandledException ex = new AuraHandledException(message);
+      ex.setMessage(message);
+      throw ex;
+    }
+
+    if (!CANCELLABLE_STATUSES.contains(lstReservation[0].Status__c)) {
+      String message = 'Esta reserva ya no se puede cancelar.';
+      AuraHandledException ex = new AuraHandledException(message);
+      ex.setMessage(message);
+      throw ex;
+    }
+
+    Reservation__c toUpdate = new Reservation__c(
+      Id = lstReservation[0].Id,
+      Status__c = 'Cancelled'
+    );
+
+    SObjectAccessDecision decision = Security.stripInaccessible(
+      AccessType.UPDATABLE,
+      new List<Reservation__c>{ toUpdate }
+    );
+
+    if (!decision.getRemovedFields().isEmpty()) {
+      String message = 'No tenés permiso para modificar esta reserva.';
+      AuraHandledException ex = new AuraHandledException(message);
+      ex.setMessage(message);
+      throw ex;
     }
 
     try {

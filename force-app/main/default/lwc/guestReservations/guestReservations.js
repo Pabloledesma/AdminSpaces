@@ -1,6 +1,7 @@
 import { LightningElement, wire } from "lwc";
 import getMyReservations from "@salesforce/apex/ReservationSelfServiceController.getMyReservations";
 import updateMyReservationDates from "@salesforce/apex/ReservationSelfServiceController.updateMyReservationDates";
+import cancelMyReservation from "@salesforce/apex/ReservationSelfServiceController.cancelMyReservation";
 import { refreshApex } from "@salesforce/apex";
 
 export default class GuestReservations extends LightningElement {
@@ -11,6 +12,8 @@ export default class GuestReservations extends LightningElement {
   saveErrors = {};
   savingReservationId;
   savedReservationId;
+  cancelingReservationId;
+  cancelErrors = {};
 
   @wire(getMyReservations)
   wiredReservations(result) {
@@ -29,7 +32,11 @@ export default class GuestReservations extends LightningElement {
     if (!this.reservations) {
       return [];
     }
+
     return this.reservations.map((reservation) => {
+      const CANCELLABLE_STATUSES = ["Pending", "Confirmed"];
+      const isCanceling = this.cancelingReservationId === reservation.Id;
+      const canCancel = CANCELLABLE_STATUSES.includes(reservation.Status__c);
       const isSaving = this.savingReservationId === reservation.Id;
       const justSaved = this.savedReservationId === reservation.Id;
       return {
@@ -37,7 +44,10 @@ export default class GuestReservations extends LightningElement {
         isSaving,
         justSaved,
         saveDisabled: isSaving || justSaved,
-        saveError: this.saveErrors[reservation.Id]
+        saveError: this.saveErrors[reservation.Id],
+        isCanceling,
+        cancelDisabled: isCanceling || !canCancel,
+        cancelError: this.cancelErrors[reservation.Id]
       };
     });
   }
@@ -92,6 +102,33 @@ export default class GuestReservations extends LightningElement {
       };
     } finally {
       this.savingReservationId = undefined;
+    }
+  }
+
+  async handleCancel(event) {
+    const reservationId = event.target.dataset.reservationId;
+
+    // eslint-disable-next-line no-alert
+    const confirmed = window.confirm(
+      "Estas seguro/a que quieres cancelar esta reserva?"
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    this.cancelingReservationId = reservationId;
+    delete this.cancelErrors[reservationId];
+
+    try {
+      await cancelMyReservation({ reservationId });
+      await refreshApex(this.wiredResult);
+    } catch (error) {
+      this.cancelErrors = {
+        ...this.cancelErrors,
+        [reservationId]: error.body?.message ?? "Ocurrió un error inesperado."
+      };
+    } finally {
+      this.cancelingReservationId = undefined;
     }
   }
 }

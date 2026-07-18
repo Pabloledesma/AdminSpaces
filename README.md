@@ -24,8 +24,9 @@ Todos los objetos tienen un campo `Is_Demo__c` (default `true`), pensado para la
 - **Permission Sets**:
   - `Property_Manager` — acceso operativo completo a los 5 objetos, para administradores de la plataforma.
   - `Maintenance_Staff` — acceso exclusivo a `Maintenance_Task__c`, aplicando el principio de menor privilegio para el personal de limpieza/mantenimiento.
+  - `Huesped` — `allowEdit` sobre `Reservation__c` para el huésped autenticado (Historia 4.3). Deliberadamente un Permission Set y no un cambio al profile: más chico y portable entre orgs. La asignación a cada huésped autorregistrado es manual por ahora (ver roadmap).
 - **Guest User anónimo** (Hito 3): Sharing Rule por criterio (`Is_Demo__c = true`) sobre `Property__c` para el sitio Experience Cloud.
-- **Huésped autenticado** (Hito 4, Customer Community): `Reservation__c` es `ControlledByParent` hasta el `Property__c` raíz, así que ninguna Sharing Rule/Sharing Set declarativo puede aislar la reserva de un huésped sin exponer también las de otros huéspedes de la misma propiedad (ver detalle en el roadmap). Se resolvió con **Apex-managed sharing**: `ReservationSelfServiceController` corre `without sharing` y filtra explícitamente por `Guest__c = ContactId` del usuario logueado — el único control de acceso es ese filtro, no el sharing declarativo.
+- **Huésped autenticado** (Hito 4, Customer Community): `Reservation__c` es `ControlledByParent` hasta el `Property__c` raíz, así que ninguna Sharing Rule/Sharing Set declarativo puede aislar la reserva de un huésped sin exponer también las de otros huéspedes de la misma propiedad (ver detalle en el roadmap). Se resolvió con **Apex-managed sharing**: `ReservationSelfServiceController` corre `without sharing` y filtra explícitamente por `Guest__c = ContactId` del usuario logueado — el único control de acceso es ese filtro, no el sharing declarativo. Para la escritura (Historia 4.3), como una `update` de Apex no aplica CRUD/FLS automáticamente, se suma `Security.stripInaccessible` sobre un registro armado solo con los campos que se editan (no el resultado completo de una query de lectura, que arrastraría campos irrelevantes y bloquearía el update por permisos que no corresponden a esa operación).
 
 ## Lógica de negocio (Apex)
 
@@ -55,7 +56,7 @@ ReservationTriggerHandler   (orquesta antes de insert/update, sin lógica de neg
 
 ## Componentes LWC
 
-**`guestReservations`** (Historia 4.2): componente del portal autenticado que muestra al huésped el detalle de su propia reserva (habitación, fechas, monto, estado), consumiendo `ReservationSelfServiceController.getMyReservations` vía `@wire`. Maneja los tres estados (datos, vacío, error) y tiene su propio test Jest (`__tests__/guestReservations.test.js`), sin fase de testing separada — mismo criterio que el resto del Hito 4/5.
+**`guestReservations`** (Historias 4.2, 4.3 y 4.4): componente del portal autenticado que muestra al huésped el detalle de su propia reserva (habitación, fechas, monto, estado) vía `@wire` a `getMyReservations`, le permite modificar las fechas de check-in/check-out (`updateMyReservationDates`) y cancelarla (`cancelMyReservation`, con confirmación previa) — ambas llamadas imperativas, no vía Lightning Data Service, ya que `Reservation__c` no tiene ningún camino de sharing declarativo viable para esto (ver roadmap). Maneja los estados de lectura (datos/vacío/error) y de cada mutación (deshabilitado mientras guarda/cancela, mensaje de éxito, mensaje de error, reactivación al editar de nuevo), todo cubierto por su test Jest (`__tests__/guestReservations.test.js`), sin fase de testing separada.
 
 ## Testing
 
@@ -74,7 +75,7 @@ Estado actual por hito (detalle completo con historias en [`docs/property-manage
 - 🟡 **Hito 1** — Seguridad y permisos (Permission Sets listos; Guest User se resuelve en el Hito 3)
 - 🟡 **Hito 2** — Lógica de negocio en Apex y Flow (no overbooking, cálculo de total, liberación/no-show de habitaciones y tarea de limpieza automática listos)
 - ✅ **Hito 3** — Sitio Experience Cloud (publicado; Guest User anónimo viendo demo data)
-- 🟡 **Hito 4** — Portal de autoservicio del huésped (login/registro y vista de la propia reserva listos; falta modificar/cancelar)
+- ✅ **Hito 4** — Portal de autoservicio del huésped (login/registro, ver/editar/cancelar la propia reserva)
 - ⬜ **Hito 5** — Componentes LWC (cada historia incluye sus propios tests Jest, sin fase de testing separada)
 - ⬜ **Hito 6** — Agentforce
 

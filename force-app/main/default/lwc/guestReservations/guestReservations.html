@@ -55,6 +55,20 @@
             <template lwc:if={reservation.justSaved}>
               <p data-id="save-success">Reserva actualizada correctamente.</p>
             </template>
+            <lightning-button
+              label="Cancelar"
+              variant="destructive"
+              disabled={reservation.cancelDisabled}
+              data-reservation-id={reservation.Id}
+              data-field="cancelButton"
+              onclick={handleCancel}
+            ></lightning-button>
+            <template lwc:if={reservation.cancelError}>
+              <p data-id="cancel-error" class="slds-text-color_error">
+                {reservation.cancelError}
+              </p>
+            </template>
+
             <template lwc:if={reservation.saveError}>
               <p data-id="save-error" class="slds-text-color_error">
                 {reservation.saveError}

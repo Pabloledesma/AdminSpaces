@@ -2,6 +2,7 @@ import { createElement } from "lwc";
 import GuestReservations from "c/guestReservations";
 import getMyReservationsAdapter from "@salesforce/apex/ReservationSelfServiceController.getMyReservations";
 import updateMyReservationDates from "@salesforce/apex/ReservationSelfServiceController.updateMyReservationDates";
+import cancelMyReservation from "@salesforce/apex/ReservationSelfServiceController.cancelMyReservation";
 import { refreshApex } from "@salesforce/apex";
 
 jest.mock(
@@ -241,5 +242,57 @@ describe("c-guest-reservations", () => {
       '[data-id="error-state"]'
     );
     expect(errorState).not.toBeNull();
+  });
+});
+
+describe("cancelar la reserva", () => {
+  beforeEach(() => {
+    cancelMyReservation.mockReset();
+  });
+
+  it("pide confirmación y no cancela si el usuario dice que no", async () => {
+    jest.spyOn(window, "confirm").mockReturnValue(false);
+
+    const RESERVATION_ID = MOCK_RESERVATIONS[0].Id;
+    const element = createElement("c-guest-guestReservations", {
+      is: GuestReservations
+    });
+    document.body.appendChild(element);
+
+    getMyReservationsAdapter.emit(MOCK_RESERVATIONS);
+    await Promise.resolve();
+
+    const cancelButton = element.shadowRoot.querySelector(
+      `[data-reservation-id="${RESERVATION_ID}"][data-field="cancelButton"]`
+    );
+    cancelButton.dispatchEvent(new CustomEvent("click"));
+    await Promise.resolve();
+    expect(cancelMyReservation).not.toHaveBeenCalled();
+  });
+
+  it("cancela la reserva si el usuario confirma", async () => {
+    jest.spyOn(window, "confirm").mockReturnValue(true);
+    cancelMyReservation.mockResolvedValue();
+
+    const RESERVATION_ID = MOCK_RESERVATIONS[0].Id;
+    const element = createElement("c-guest-guestReservations", {
+      is: GuestReservations
+    });
+    document.body.appendChild(element);
+
+    getMyReservationsAdapter.emit(MOCK_RESERVATIONS);
+    await Promise.resolve();
+
+    const cancelButton = element.shadowRoot.querySelector(
+      `[data-reservation-id="${RESERVATION_ID}"][data-field="cancelButton"]`
+    );
+    cancelButton.dispatchEvent(new CustomEvent("click"));
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(cancelMyReservation).toHaveBeenCalledWith({
+      reservationId: RESERVATION_ID
+    });
   });
 });

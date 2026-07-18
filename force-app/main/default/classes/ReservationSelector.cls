@@ -123,7 +123,7 @@ public inherited sharing class ReservationSelector {
     }
 
     return [
-      SELECT Id, Check_In_Date__c, Check_Out_Date__c
+      SELECT Id, Check_In_Date__c, Check_Out_Date__c, Status__c
       FROM Reservation__c
       WHERE Id = :reservationId AND Guest__c = :guestContactId
       WITH SECURITY_ENFORCED
