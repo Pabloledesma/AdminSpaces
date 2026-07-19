@@ -58,6 +58,8 @@ ReservationTriggerHandler   (orquesta antes de insert/update, sin lógica de neg
 
 **`guestReservations`** (Historias 4.2, 4.3 y 4.4): componente del portal autenticado que muestra al huésped el detalle de su propia reserva (habitación, fechas, monto, estado) vía `@wire` a `getMyReservations`, le permite modificar las fechas de check-in/check-out (`updateMyReservationDates`) y cancelarla (`cancelMyReservation`, con confirmación previa) — ambas llamadas imperativas, no vía Lightning Data Service, ya que `Reservation__c` no tiene ningún camino de sharing declarativo viable para esto (ver roadmap). Maneja los estados de lectura (datos/vacío/error) y de cada mutación (deshabilitado mientras guarda/cancela, mensaje de éxito, mensaje de error, reactivación al editar de nuevo), todo cubierto por su test Jest (`__tests__/guestReservations.test.js`), sin fase de testing separada.
 
+**`propertyDashboard`** (Historia 5.1): componente interno (no del sitio Experience Cloud) en la Lightning Record Page de `Property__c`, para el Property Manager. Usa `@api recordId` y `@wire` a `PropertyDashboardController.getDashboardData`, que calcula ocupación (`RoomSelector`, `GROUP BY Status__c`), ingresos del mes (`ReservationSelector`, `SUM()` con rango de fechas exclusivo) y tareas de mantenimiento pendientes (`MaintenanceTaskSelector`, `COUNT()`) — las tres con la consulta SOQL más barata posible para cada caso, no con listas completas de registros.
+
 ## Testing
 
 ```bash
@@ -76,7 +78,7 @@ Estado actual por hito (detalle completo con historias en [`docs/property-manage
 - 🟡 **Hito 2** — Lógica de negocio en Apex y Flow (no overbooking, cálculo de total, liberación/no-show de habitaciones y tarea de limpieza automática listos)
 - ✅ **Hito 3** — Sitio Experience Cloud (publicado; Guest User anónimo viendo demo data)
 - ✅ **Hito 4** — Portal de autoservicio del huésped (login/registro, ver/editar/cancelar la propia reserva)
-- ⬜ **Hito 5** — Componentes LWC (cada historia incluye sus propios tests Jest, sin fase de testing separada)
+- 🟡 **Hito 5** — Componentes LWC (dashboard de propiedad listo; faltan las historias 5.2-5.5)
 - ⬜ **Hito 6** — Agentforce
 
 ## Desarrollo asistido por IA

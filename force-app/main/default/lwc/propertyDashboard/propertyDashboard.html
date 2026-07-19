@@ -1,0 +1,12 @@
+<template>
+  <lightning-card>
+    <template lwc:if={dashboardData}>
+      <div>
+        <p>Total Rooms: {dashboardData.totalRooms}</p>
+        <p>Occupied Rooms: {dashboardData.occupiedRooms}</p>
+        <p>Monthly Revenue: {dashboardData.monthlyRevenue}</p>
+        <p>Pending Tasks: {dashboardData.pendingTasksCount}</p>
+      </div>
+    </template>
+  </lightning-card>
+</template>

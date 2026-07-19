@@ -130,4 +130,37 @@ public inherited sharing class ReservationSelector {
       ORDER BY Check_In_Date__c DESC
     ];
   }
+
+  /**
+   * Suma el Total_Amount__c de las reservas no canceladas de una propiedad
+   * cuyo Check_In_Date__c cae dentro del rango [startDate, endDate) — el
+   * límite superior es exclusivo a propósito, para no tener que calcular
+   * el último día del mes desde el caller (ver PropertyDashboardController).
+   * @param propertyId Id de la Property__c
+   * @param startDate Fecha de inicio del rango (inclusive)
+   * @param endDate Fecha de fin del rango (exclusive)
+   * @return Suma de Total_Amount__c, o 0 si no hay reservas en el rango
+   */
+  public static Decimal getMonthlyRevenueForProperty(
+    Id propertyId,
+    Date startDate,
+    Date endDate
+  ) {
+    if (propertyId == null) {
+      return 0;
+    }
+
+    AggregateResult result = [
+      SELECT SUM(Total_Amount__c) total
+      FROM Reservation__c
+      WHERE
+        Room__r.Property__c = :propertyId
+        AND Check_In_Date__c >= :startDate
+        AND Check_In_Date__c < :endDate
+        AND Status__c != 'Cancelled'
+    ];
+
+    Object total = result.get('total');
+    return total == null ? 0 : (Decimal) total;
+  }
 }
