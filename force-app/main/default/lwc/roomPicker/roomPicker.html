@@ -1,0 +1,12 @@
+<template>
+  <template lwc:if={error}>
+    <p class="slds-text-color_error">{error}</p>
+  </template>
+  <template lwc:else>
+    <lightning-combobox
+      label="Habitación"
+      options={options}
+      onchange={handleChange}
+    ></lightning-combobox>
+  </template>
+</template>

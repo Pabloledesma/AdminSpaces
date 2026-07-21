@@ -24,4 +24,17 @@ public inherited sharing class RoomSelector {
     }
     return countsByStatus;
   }
+
+  public static List<Room__c> getRoomFromPropertyId(Id propertyId) {
+    List<Room__c> lstRoom = new List<Room__c>();
+    if (propertyId == null) {
+      return lstRoom;
+    }
+
+    return [
+      SELECT Id, Name, Room_Type__c, Capacity__c, Nightly_Rate__c, Status__c
+      FROM Room__c
+      WHERE Property__c = :propertyId
+    ];
+  }
 }

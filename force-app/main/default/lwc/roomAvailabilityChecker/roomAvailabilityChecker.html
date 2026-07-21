@@ -1,0 +1,32 @@
+<template>
+  <lightning-card title="Chequear disponibilidad">
+    <div class="slds-p-horizontal_medium">
+      <c-room-picker
+        property-id={recordId}
+        onroomselect={handleRoomSelect}
+      ></c-room-picker>
+
+      <template lwc:if={blockedRanges}>
+        <p>Fechas ya reservadas:</p>
+        <template for:each={blockedRanges} for:item="range">
+          <p key={range.id}>{range.label}</p>
+        </template>
+      </template>
+
+      <c-date-range-picker
+        ondaterangechange={handleDateRangeChange}
+      ></c-date-range-picker>
+
+      <lightning-button
+        label="Verificar disponibilidad"
+        disabled={cannotCheck}
+        onclick={handleCheckAvailability}
+      ></lightning-button>
+
+      <c-availability-result
+        is-available={isAvailable}
+        has-checked={hasBeenChecked}
+      ></c-availability-result>
+    </div>
+  </lightning-card>
+</template>

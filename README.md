@@ -60,6 +60,8 @@ ReservationTriggerHandler   (orquesta antes de insert/update, sin lógica de neg
 
 **`propertyDashboard`** (Historia 5.1): componente interno (no del sitio Experience Cloud) en la Lightning Record Page de `Property__c`, para el Property Manager. Usa `@api recordId` y `@wire` a `PropertyDashboardController.getDashboardData`, que calcula ocupación (`RoomSelector`, `GROUP BY Status__c`), ingresos del mes (`ReservationSelector`, `SUM()` con rango de fechas exclusivo) y tareas de mantenimiento pendientes (`MaintenanceTaskSelector`, `COUNT()`) — las tres con la consulta SOQL más barata posible para cada caso, no con listas completas de registros.
 
+**Familia `roomAvailabilityChecker`** (Historia 5.2): 4 LWC en la misma Record Page de `Property__c`, comunicados por Custom Events (hijo→padre) y propiedades `@api` (padre→hijo) — `roomAvailabilityChecker` (padre, orquesta) + `roomPicker`, `dateRangePicker` y `availabilityResult` (hijos). `RoomAvailabilityController.checkAvailability` reutiliza `ReservationOverlapValidator.overlaps` (Historia 2.1) en vez de duplicar la regla de solapamiento — la llamada es imperativa a propósito (objetivo explícito de la historia), mientras que la carga de habitaciones y de fechas ya reservadas usa `@wire`. Se evaluaron en el camino y se descartaron: Platform Events (no hay caso de uso pub/sub genuino acá) y compilar los componentes en TypeScript vía `tsc` (`@api`/`@wire` no son decoradores TC39 estándar — solo `@lwc/compiler` los interpreta; `tsc` los rompe con un polyfill que el compilador de LWC no reconoce). Detalle completo en el roadmap.
+
 ## Testing
 
 ```bash
@@ -78,7 +80,7 @@ Estado actual por hito (detalle completo con historias en [`docs/property-manage
 - 🟡 **Hito 2** — Lógica de negocio en Apex y Flow (no overbooking, cálculo de total, liberación/no-show de habitaciones y tarea de limpieza automática listos)
 - ✅ **Hito 3** — Sitio Experience Cloud (publicado; Guest User anónimo viendo demo data)
 - ✅ **Hito 4** — Portal de autoservicio del huésped (login/registro, ver/editar/cancelar la propia reserva)
-- 🟡 **Hito 5** — Componentes LWC (dashboard de propiedad listo; faltan las historias 5.2-5.5)
+- 🟡 **Hito 5** — Componentes LWC (dashboard de propiedad y chequeo de disponibilidad listos; faltan las historias 5.3-5.5)
 - ⬜ **Hito 6** — Agentforce
 
 ## Desarrollo asistido por IA

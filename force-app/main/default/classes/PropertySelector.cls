@@ -6,4 +6,8 @@ public inherited sharing class PropertySelector {
       WHERE Id = :propertyId
     ];
   }
+
+  public static List<Property__c> getPropertyByRoomCount(Integer roomCount) {
+    return [SELECT Id FROM Property__c WHERE Room_Count__c = :roomCount];
+  }
 }
