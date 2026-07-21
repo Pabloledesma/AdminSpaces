@@ -27,6 +27,27 @@
         is-available={isAvailable}
         has-checked={hasBeenChecked}
       ></c-availability-result>
+
+      <template lwc:if={isAvailable}>
+        <lightning-record-picker
+          label="Huésped"
+          object-api-name="Contact"
+          onchange={handleGuestSelect}
+        ></lightning-record-picker>
+
+        <lightning-button
+          label="Crear reserva"
+          disabled={cannotCreate}
+          onclick={handleCreateReservation}
+        ></lightning-button>
+
+        <template lwc:if={reservationCreated}>
+          <p>Reserva creada con éxito ✅</p>
+        </template>
+        <template lwc:if={createError}>
+          <p class="slds-text-color_error">{createError}</p>
+        </template>
+      </template>
     </div>
   </lightning-card>
 </template>
