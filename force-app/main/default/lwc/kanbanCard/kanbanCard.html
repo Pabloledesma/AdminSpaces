@@ -1,0 +1,15 @@
+<template>
+  <div class="slds-box slds-m-bottom_small">
+    <p>Descripción: {task.description}</p>
+    <p>Prioridad: {task.priority}</p>
+    <p>Vence: {task.dueDate}</p>
+    <template for:each={task.moveTargets} for:item="target">
+      <lightning-button
+        key={target.value}
+        data-value={target.value}
+        label={target.label}
+        onclick={handleMove}
+      ></lightning-button>
+    </template>
+  </div>
+</template>
