@@ -6,10 +6,7 @@ public with sharing class PropertyDashboardController {
     );
 
     if (lstProperties.isEmpty()) {
-      String message = 'No se encontró ninguna propiedad!';
-      AuraHandledException ex = new AuraHandledException(message);
-      ex.setMessage(message);
-      throw ex;
+      throw AuraExceptionUtil.create(System.Label.Property_Not_Found);
     }
     DashboardData data = new DashboardData();
     Date startOfMonth = Date.today().toStartOfMonth();

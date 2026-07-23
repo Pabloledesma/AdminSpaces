@@ -33,4 +33,16 @@ public inherited sharing class MaintenanceTaskSelector {
         AND Status__c IN ('Pending', 'In Progress')
     ];
   }
+
+  public static List<Maintenance_Task__c> getByPropertyId(Id propertyId) {
+    if (propertyId == null) {
+      return new List<Maintenance_Task__c>();
+    }
+
+    return [
+      SELECT Id, Status__c, Description__c, Priority__c, Due_Date__c
+      FROM Maintenance_Task__c
+      WHERE Property__c = :propertyId
+    ];
+  }
 }

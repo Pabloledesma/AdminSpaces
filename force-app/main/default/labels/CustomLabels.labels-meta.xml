@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>Maintenance_Invalid_Status</fullName>
+        <categories>AdminSpaces</categories>
+        <language>es</language>
+        <protected>false</protected>
+        <shortDescription
+    >Estado inválido de Maintenance_Task__c recibido desde el LWC kanban.</shortDescription>
+        <value>Estado inválido: {0}</value>
+    </labels>
+    <labels>
+        <fullName>Property_Not_Found</fullName>
+        <categories>AdminSpaces</categories>
+        <language>es</language>
+        <protected>false</protected>
+        <shortDescription
+    >Property__c no encontrada en PropertyDashboardController.</shortDescription>
+        <value>No se encontró ninguna propiedad!</value>
+    </labels>
+    <labels>
+        <fullName>Reservation_Not_Found</fullName>
+        <categories>AdminSpaces</categories>
+        <language>es</language>
+        <protected>false</protected>
+        <shortDescription
+    >Reserva no encontrada o no pertenece al huésped autenticado.</shortDescription>
+        <value>No se encontró la reserva</value>
+    </labels>
+    <labels>
+        <fullName>Reservation_No_Edit_Permission</fullName>
+        <categories>AdminSpaces</categories>
+        <language>es</language>
+        <protected>false</protected>
+        <shortDescription
+    >Huésped sin permiso de edición (FLS) sobre la reserva.</shortDescription>
+        <value>No tenés permiso para modificar esta reserva.</value>
+    </labels>
+    <labels>
+        <fullName>Reservation_Not_Cancellable</fullName>
+        <categories>AdminSpaces</categories>
+        <language>es</language>
+        <protected>false</protected>
+        <shortDescription
+    >La reserva ya no está en un estado cancelable (Pending/Confirmed).</shortDescription>
+        <value>Esta reserva ya no se puede cancelar.</value>
+    </labels>
+    <labels>
+        <fullName>Reservation_Overlap_Error</fullName>
+        <categories>AdminSpaces</categories>
+        <language>es</language>
+        <protected>false</protected>
+        <shortDescription
+    >Solapamiento de fechas detectado por el trigger de Reservation__c.</shortDescription>
+        <value
+    >Las fechas se solapan con otra reserva existente para esta habitación.</value>
+    </labels>
+</CustomLabels>

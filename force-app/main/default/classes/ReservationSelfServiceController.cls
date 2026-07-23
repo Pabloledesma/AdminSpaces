@@ -48,7 +48,7 @@ public without sharing class ReservationSelfServiceController {
       reservationId
     );
     if (lstReservation.isEmpty()) {
-      throw new AuraHandledException('No se encontró la reserva');
+      throw AuraExceptionUtil.create(System.Label.Reservation_Not_Found);
     }
 
     Reservation__c toUpdate = new Reservation__c(Id = lstReservation[0].Id);
@@ -66,15 +66,15 @@ public without sharing class ReservationSelfServiceController {
     );
 
     if (!decision.getRemovedFields().isEmpty()) {
-      throw new AuraHandledException(
-        'No tenés permiso para modificar esta reserva.'
+      throw AuraExceptionUtil.create(
+        System.Label.Reservation_No_Edit_Permission
       );
     }
 
     try {
       update decision.getRecords();
     } catch (DmlException e) {
-      throw new AuraHandledException(e.getDmlMessage(0));
+      throw AuraExceptionUtil.create(e.getDmlMessage(0));
     }
   }
 
@@ -87,17 +87,11 @@ public without sharing class ReservationSelfServiceController {
     );
 
     if (lstReservation.isEmpty()) {
-      String message = 'No se encontró la reserva';
-      AuraHandledException ex = new AuraHandledException(message);
-      ex.setMessage(message);
-      throw ex;
+      throw AuraExceptionUtil.create(System.Label.Reservation_Not_Found);
     }
 
     if (!CANCELLABLE_STATUSES.contains(lstReservation[0].Status__c)) {
-      String message = 'Esta reserva ya no se puede cancelar.';
-      AuraHandledException ex = new AuraHandledException(message);
-      ex.setMessage(message);
-      throw ex;
+      throw AuraExceptionUtil.create(System.Label.Reservation_Not_Cancellable);
     }
 
     Reservation__c toUpdate = new Reservation__c(
@@ -111,16 +105,15 @@ public without sharing class ReservationSelfServiceController {
     );
 
     if (!decision.getRemovedFields().isEmpty()) {
-      String message = 'No tenés permiso para modificar esta reserva.';
-      AuraHandledException ex = new AuraHandledException(message);
-      ex.setMessage(message);
-      throw ex;
+      throw AuraExceptionUtil.create(
+        System.Label.Reservation_No_Edit_Permission
+      );
     }
 
     try {
       update decision.getRecords();
     } catch (DmlException e) {
-      throw new AuraHandledException(e.getDmlMessage(0));
+      throw AuraExceptionUtil.create(e.getDmlMessage(0));
     }
   }
 

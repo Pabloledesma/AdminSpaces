@@ -17,10 +17,7 @@ public with sharing class ReservationCreationController {
     try {
       insert reservation;
     } catch (DmlException e) {
-      String message = e.getDmlMessage(0);
-      AuraHandledException ex = new AuraHandledException(message);
-      ex.setMessage(message);
-      throw ex;
+      throw AuraExceptionUtil.create(e.getDmlMessage(0));
     }
 
     return reservation.Id;
