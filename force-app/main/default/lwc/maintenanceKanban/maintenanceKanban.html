@@ -1,0 +1,15 @@
+<template>
+  <lightning-card title="Tareas de mantenimiento">
+    <div class="slds-grid slds-wrap slds-p-horizontal_medium">
+      <template for:each={columns} for:item="column">
+        <div key={column.value} class="slds-col slds-size_1-of-3">
+          <c-kanban-column
+            column-label={column.label}
+            tasks={column.tasks}
+            ontaskmove={handleTaskMove}
+          ></c-kanban-column>
+        </div>
+      </template>
+    </div>
+  </lightning-card>
+</template>
