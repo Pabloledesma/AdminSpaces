@@ -1,9 +1,14 @@
 <template>
-  <lightning-input type="date" label="Check-In" onchange={handleCheckInChange}>
-  </lightning-input>
+  <lightning-input
+    type="date"
+    label="Check-In"
+    max={checkOut}
+    onchange={handleCheckInChange}
+  ></lightning-input>
   <lightning-input
     type="date"
     label="Check-Out"
+    min={checkIn}
     onchange={handleCheckOutChange}
   ></lightning-input>
 </template>

@@ -40,13 +40,14 @@
           disabled={cannotCreate}
           onclick={handleCreateReservation}
         ></lightning-button>
+      </template>
 
-        <template lwc:if={reservationCreated}>
-          <p>Reserva creada con éxito ✅</p>
-        </template>
-        <template lwc:if={createError}>
-          <p class="slds-text-color_error">{createError}</p>
-        </template>
+      <template lwc:if={reservationCreated}>
+        <p>Reserva creada con éxito ✅</p>
+      </template>
+
+      <template lwc:if={createError}>
+        <p class="slds-text-color_error">{createError}</p>
       </template>
     </div>
   </lightning-card>

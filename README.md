@@ -62,6 +62,8 @@ ReservationTriggerHandler   (orquesta antes de insert/update, sin lógica de neg
 
 **Familia `roomAvailabilityChecker`** (Historias 5.2 y 5.3): 4 LWC en la misma Record Page de `Property__c`, comunicados por Custom Events (hijo→padre) y propiedades `@api` (padre→hijo) — `roomAvailabilityChecker` (padre, orquesta) + `roomPicker`, `dateRangePicker` y `availabilityResult` (hijos). `RoomAvailabilityController.checkAvailability` reutiliza `ReservationOverlapValidator.overlaps` (Historia 2.1) en vez de duplicar la regla de solapamiento — la llamada es imperativa a propósito (objetivo explícito de la historia), mientras que la carga de habitaciones y de fechas ya reservadas usa `@wire`. Se evaluaron en el camino y se descartaron: Platform Events (no hay caso de uso pub/sub genuino acá) y compilar los componentes en TypeScript vía `tsc` (`@api`/`@wire` no son decoradores TC39 estándar — solo `@lwc/compiler` los interpreta; `tsc` los rompe con un polyfill que el compilador de LWC no reconoce). La Historia 5.3 extendió el mismo padre en vez de armar un formulario aparte: un `lightning-record-picker` de `Contact` + botón "Crear reserva" (`ReservationCreationController.createReservation`), habilitado solo cuando ya se confirmó disponibilidad y hay huésped elegido — el enforcement real sigue siendo el trigger de la Historia 2.1, esto es solo UX. Detalle completo en el roadmap.
 
+**Familia `maintenanceKanban`** (Historia 5.4, en progreso): tablero kanban de `Maintenance_Task__c` con 3 niveles — `maintenanceKanban` (padre, orquesta) → `kanbanColumn` (una por estado) → `kanbanCard` (una por tarea). Construida con TDD de abajo hacia arriba (primero la hoja, al final el orquestador). El evento de "mover tarea" viaja hijo→padre en cada nivel con re-dispatch explícito en `kanbanColumn` (no depende de que el evento cruce shadow DOM solo), y `maintenanceKanban` calcula por tarea el estado anterior/siguiente (`moveTargets`) según el orden del picklist ya expuesto por `MaintenanceTaskStatusService` — las tarjetas no conocen ninguna regla de negocio. Pendiente de decisión: sumar Lightning Message Service (con `propertyDashboard`, componentes hermanos) y Platform Events (sincronización entre sesiones) para completar la práctica de todas las formas de comunicación entre LWC.
+
 ## Testing
 
 ```bash
@@ -80,7 +82,7 @@ Estado actual por hito (detalle completo con historias en [`docs/property-manage
 - 🟡 **Hito 2** — Lógica de negocio en Apex y Flow (no overbooking, cálculo de total, liberación/no-show de habitaciones y tarea de limpieza automática listos)
 - ✅ **Hito 3** — Sitio Experience Cloud (publicado; Guest User anónimo viendo demo data)
 - ✅ **Hito 4** — Portal de autoservicio del huésped (login/registro, ver/editar/cancelar la propia reserva)
-- 🟡 **Hito 5** — Componentes LWC (dashboard de propiedad, chequeo de disponibilidad y creación de reserva listos; faltan las historias 5.4-5.5)
+- 🟡 **Hito 5** — Componentes LWC (dashboard de propiedad, chequeo de disponibilidad y creación de reserva listos; kanban de mantenimiento en progreso; falta la historia 5.5)
 - ⬜ **Hito 6** — Agentforce
 
 ## Desarrollo asistido por IA

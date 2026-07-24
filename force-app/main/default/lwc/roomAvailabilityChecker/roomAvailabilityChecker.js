@@ -32,12 +32,16 @@ export default class RoomAvailabilityChecker extends LightningElement {
   handleRoomSelect(event) {
     this.selectedRoomId = event.detail.roomId;
     this.isAvailable = undefined;
+    this.reservationCreated = false;
+    this.createError = undefined;
   }
 
   handleDateRangeChange(event) {
     this.checkinDate = event.detail.checkIn;
     this.checkoutDate = event.detail.checkOut;
     this.isAvailable = undefined;
+    this.reservationCreated = false;
+    this.createError = undefined;
   }
 
   handleGuestSelect(event) {

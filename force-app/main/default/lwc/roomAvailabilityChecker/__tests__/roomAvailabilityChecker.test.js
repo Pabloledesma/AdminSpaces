@@ -129,4 +129,108 @@ describe("c-room-availability-checker", () => {
       checkOut: "2026-08-05"
     });
   });
+
+  it("muestra el mensaje de éxito después de crear la reserva", async () => {
+    checkAvailability.mockResolvedValue(true);
+    createReservation.mockResolvedValue("a07000000000001AAA");
+
+    const element = createElement("c-room-availability-checker", {
+      is: RoomAvailabilityChecker
+    });
+    element.recordId = "a06000000000001AAA";
+    document.body.appendChild(element);
+
+    element.shadowRoot.querySelector("c-room-picker").dispatchEvent(
+      new CustomEvent("roomselect", {
+        detail: { roomId: "a05000000000001AAA" }
+      })
+    );
+    element.shadowRoot.querySelector("c-date-range-picker").dispatchEvent(
+      new CustomEvent("daterangechange", {
+        detail: { checkIn: "2026-08-01", checkOut: "2026-08-05" }
+      })
+    );
+    await Promise.resolve();
+
+    element.shadowRoot
+      .querySelector("lightning-button")
+      .dispatchEvent(new CustomEvent("click"));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    element.shadowRoot.querySelector("lightning-record-picker").dispatchEvent(
+      new CustomEvent("change", {
+        detail: { recordId: "003000000000001AAA" }
+      })
+    );
+    await Promise.resolve();
+
+    element.shadowRoot
+      .querySelectorAll("lightning-button")[1]
+      .dispatchEvent(new CustomEvent("click"));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(element.shadowRoot.textContent).toContain(
+      "Reserva creada con éxito"
+    );
+  });
+
+  it("limpia el mensaje de éxito cuando se elige una nueva habitación", async () => {
+    checkAvailability.mockResolvedValue(true);
+    createReservation.mockResolvedValue("a07000000000001AAA");
+
+    const element = createElement("c-room-availability-checker", {
+      is: RoomAvailabilityChecker
+    });
+    element.recordId = "a06000000000001AAA";
+    document.body.appendChild(element);
+
+    const roomPicker = element.shadowRoot.querySelector("c-room-picker");
+    roomPicker.dispatchEvent(
+      new CustomEvent("roomselect", {
+        detail: { roomId: "a05000000000001AAA" }
+      })
+    );
+    element.shadowRoot.querySelector("c-date-range-picker").dispatchEvent(
+      new CustomEvent("daterangechange", {
+        detail: { checkIn: "2026-08-01", checkOut: "2026-08-05" }
+      })
+    );
+    await Promise.resolve();
+
+    element.shadowRoot
+      .querySelector("lightning-button")
+      .dispatchEvent(new CustomEvent("click"));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    element.shadowRoot.querySelector("lightning-record-picker").dispatchEvent(
+      new CustomEvent("change", {
+        detail: { recordId: "003000000000001AAA" }
+      })
+    );
+    await Promise.resolve();
+
+    element.shadowRoot
+      .querySelectorAll("lightning-button")[1]
+      .dispatchEvent(new CustomEvent("click"));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(element.shadowRoot.textContent).toContain(
+      "Reserva creada con éxito"
+    );
+
+    roomPicker.dispatchEvent(
+      new CustomEvent("roomselect", {
+        detail: { roomId: "a05000000000002AAA" }
+      })
+    );
+    await Promise.resolve();
+
+    expect(element.shadowRoot.textContent).not.toContain(
+      "Reserva creada con éxito"
+    );
+  });
 });
