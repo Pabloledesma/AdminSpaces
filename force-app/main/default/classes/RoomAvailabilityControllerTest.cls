@@ -64,6 +64,21 @@ private class RoomAvailabilityControllerTest {
   }
 
   @isTest
+  static void checkAvailability_returnsFalseWhenCheckOutIsNotAfterCheckIn() {
+    Room__c room1 = [SELECT Id FROM Room__c LIMIT 1];
+    Boolean available = RoomAvailabilityController.checkAvailability(
+      room1.Id,
+      Date.today().addDays(32),
+      Date.today().addDays(30)
+    );
+    System.assertEquals(
+      false,
+      available,
+      'Un rango con checkout anterior o igual al checkin nunca debería darse como disponible'
+    );
+  }
+
+  @isTest
   static void checkAvailability_ignoresCancelledReservations() {
     Room__c room1 = [SELECT Id FROM Room__c LIMIT 1];
     // mismas fechas que la reserva Cancelled (20-22) — no debería bloquear

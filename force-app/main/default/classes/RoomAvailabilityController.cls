@@ -5,6 +5,10 @@ public with sharing class RoomAvailabilityController {
     Date checkIn,
     Date checkOut
   ) {
+    if (checkOut <= checkIn) {
+      return false;
+    }
+
     List<Reservation__c> existingReservations = ReservationSelector.getByRoomIdsAndStatuses(
       new Set<Id>{ roomId },
       ReservationOverlapValidator.BLOCKING_STATUSES

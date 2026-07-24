@@ -50,7 +50,10 @@ export default class RoomAvailabilityChecker extends LightningElement {
 
   get canCheck() {
     return Boolean(
-      this.selectedRoomId && this.checkinDate && this.checkoutDate
+      this.selectedRoomId &&
+      this.checkinDate &&
+      this.checkoutDate &&
+      this.checkoutDate > this.checkinDate
     );
   }
 
