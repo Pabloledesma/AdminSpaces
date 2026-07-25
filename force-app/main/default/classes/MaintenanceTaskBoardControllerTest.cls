@@ -42,10 +42,18 @@ private class MaintenanceTaskBoardControllerTest {
 
   @isTest
   static void updateTaskStatus_movesTaskToNewStatus() {
-    Maintenance_Task__c task = [SELECT Id FROM Maintenance_Task__c LIMIT 1];
+    Maintenance_Task__c task = [
+      SELECT Id, Property__c
+      FROM Maintenance_Task__c
+      LIMIT 1
+    ];
 
     Test.startTest();
-    MaintenanceTaskBoardController.updateTaskStatus(task.Id, 'In Progress');
+    MaintenanceTaskBoardController.updateTaskStatus(
+      task.Id,
+      'In Progress',
+      task.Property__c
+    );
     Test.stopTest();
 
     Maintenance_Task__c updated = [
@@ -58,10 +66,18 @@ private class MaintenanceTaskBoardControllerTest {
 
   @isTest
   static void updateTaskStatus_rejectsValueNotInPicklist() {
-    Maintenance_Task__c task = [SELECT Id FROM Maintenance_Task__c LIMIT 1];
+    Maintenance_Task__c task = [
+      SELECT Id, Property__c
+      FROM Maintenance_Task__c
+      LIMIT 1
+    ];
 
     try {
-      MaintenanceTaskBoardController.updateTaskStatus(task.Id, 'Cancelled');
+      MaintenanceTaskBoardController.updateTaskStatus(
+        task.Id,
+        'Cancelled',
+        task.Property__c
+      );
       System.assert(
         false,
         'Debería haber rechazado un estado que no existe en el picklist'
@@ -73,11 +89,19 @@ private class MaintenanceTaskBoardControllerTest {
 
   @isTest
   static void updateTaskStatus_wrapsDmlExceptionWithRealMessage() {
-    Maintenance_Task__c task = [SELECT Id FROM Maintenance_Task__c LIMIT 1];
+    Maintenance_Task__c task = [
+      SELECT Id, Property__c
+      FROM Maintenance_Task__c
+      LIMIT 1
+    ];
     delete task;
 
     try {
-      MaintenanceTaskBoardController.updateTaskStatus(task.Id, 'In Progress');
+      MaintenanceTaskBoardController.updateTaskStatus(
+        task.Id,
+        'In Progress',
+        task.Property__c
+      );
       System.assert(
         false,
         'Debería haber tirado una excepción: el registro ya no existe'

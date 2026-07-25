@@ -1,8 +1,11 @@
 import { LightningElement, api, wire } from "lwc";
 import { refreshApex } from "@salesforce/apex";
+import { subscribe, unsubscribe, onError } from "lightning/empApi";
 import getTasksForProperty from "@salesforce/apex/MaintenanceTaskBoardController.getTasksForProperty";
 import getTaskStatusOptions from "@salesforce/apex/MaintenanceTaskBoardController.getTaskStatusOptions";
 import updateTaskStatus from "@salesforce/apex/MaintenanceTaskBoardController.updateTaskStatus";
+
+const CHANNEL = "/event/Maintenance_Task_Moved__e";
 
 export default class MaintenanceKanban extends LightningElement {
   @api recordId;
@@ -10,6 +13,33 @@ export default class MaintenanceKanban extends LightningElement {
   statusOptions;
   tasksResult;
   tasks;
+  subscription;
+  moveError;
+
+  connectedCallback() {
+    subscribe(CHANNEL, -1, (message) => {
+      this.handlePlatformEvent(message);
+    }).then((response) => {
+      this.subscription = response;
+    });
+
+    onError((error) => {
+      console.error("Error de EMP API", JSON.stringify(error));
+    });
+  }
+
+  disconnectedCallback() {
+    if (this.subscription) {
+      unsubscribe(this.subscription);
+    }
+  }
+
+  handlePlatformEvent(message) {
+    const propertyId = message.data.payload.Property_Id__c;
+    if (propertyId === this.recordId) {
+      refreshApex(this.tasksResult);
+    }
+  }
 
   @wire(getTaskStatusOptions)
   wiredStatusOptions({ data }) {
@@ -59,7 +89,13 @@ export default class MaintenanceKanban extends LightningElement {
 
   async handleTaskMove(event) {
     const { taskId, newStatus } = event.detail;
-    await updateTaskStatus({ taskId, newStatus });
-    await refreshApex(this.tasksResult);
+    this.moveError = undefined;
+    try {
+      await updateTaskStatus({ taskId, newStatus, propertyId: this.recordId });
+      await refreshApex(this.tasksResult);
+    } catch (error) {
+      this.moveError =
+        error.body?.message ?? "Ocurrió un error inesperado al mover la tarea";
+    }
   }
 }

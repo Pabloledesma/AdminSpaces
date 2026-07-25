@@ -10,7 +10,11 @@ public with sharing class MaintenanceTaskBoardController {
   }
 
   @AuraEnabled
-  public static void updateTaskStatus(Id taskId, String newStatus) {
+  public static void updateTaskStatus(
+    Id taskId,
+    String newStatus,
+    Id propertyId
+  ) {
     if (!MaintenanceTaskStatusService.isValidStatus(newStatus)) {
       throw AuraExceptionUtil.create(
         String.format(
@@ -25,5 +29,7 @@ public with sharing class MaintenanceTaskBoardController {
     } catch (DmlException e) {
       throw AuraExceptionUtil.create(e.getDmlMessage(0));
     }
+
+    MaintenanceTaskEventPublisher.publishTaskMoved(propertyId, newStatus);
   }
 }

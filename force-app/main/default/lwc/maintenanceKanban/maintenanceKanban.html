@@ -1,6 +1,10 @@
 <template>
   <lightning-card title="Tareas de mantenimiento">
     <div class="slds-grid slds-wrap slds-p-horizontal_medium">
+      <template lwc:if={moveError}>
+        <p class="slds-text-color_error">{moveError}</p>
+      </template>
+
       <template for:each={columns} for:item="column">
         <div key={column.value} class="slds-col slds-size_1-of-3">
           <c-kanban-column

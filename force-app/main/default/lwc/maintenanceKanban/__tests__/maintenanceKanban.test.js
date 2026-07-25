@@ -4,6 +4,7 @@ import getTasksForProperty from "@salesforce/apex/MaintenanceTaskBoardController
 import getTaskStatusOptions from "@salesforce/apex/MaintenanceTaskBoardController.getTaskStatusOptions";
 import updateTaskStatus from "@salesforce/apex/MaintenanceTaskBoardController.updateTaskStatus";
 import { refreshApex } from "@salesforce/apex";
+import { subscribe } from "lightning/empApi";
 
 jest.mock(
   "@salesforce/apex",
@@ -105,8 +106,81 @@ describe("c-maintenance-kanban", () => {
 
     expect(updateTaskStatus).toHaveBeenCalledWith({
       taskId: "a0X000000000001AAA",
-      newStatus: "In Progress"
+      newStatus: "In Progress",
+      propertyId: "a06000000000001AAA"
     });
     expect(refreshApex).toHaveBeenCalledTimes(1);
+  });
+
+  it("refresca las tareas cuando llega un evento para la misma propiedad", async () => {
+    const element = createElement("c-maintenance-kanban", {
+      is: MaintenanceKanban
+    });
+    element.recordId = "a06000000000001AAA";
+    document.body.appendChild(element);
+
+    getTaskStatusOptions.emit(STATUS_OPTIONS);
+    getTasksForProperty.emit(TASKS);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const messageCallback = subscribe.mock.calls[0][2];
+    messageCallback({
+      data: { payload: { Property_Id__c: "a06000000000001AAA" } }
+    });
+    await Promise.resolve();
+
+    expect(refreshApex).toHaveBeenCalledTimes(1);
+  });
+
+  it("ignora el evento si es de otra propiedad", async () => {
+    const element = createElement("c-maintenance-kanban", {
+      is: MaintenanceKanban
+    });
+    element.recordId = "a06000000000001AAA";
+    document.body.appendChild(element);
+
+    getTaskStatusOptions.emit(STATUS_OPTIONS);
+    getTasksForProperty.emit(TASKS);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const messageCallback = subscribe.mock.calls[0][2];
+    messageCallback({
+      data: { payload: { Property_Id__c: "a06999999999999AAA" } }
+    });
+    await Promise.resolve();
+
+    expect(refreshApex).not.toHaveBeenCalled();
+  });
+
+  it("muestra un mensaje de error si falla mover la tarea", async () => {
+    updateTaskStatus.mockRejectedValue({
+      body: { message: "No tenés permiso para mover esta tarea." }
+    });
+
+    const element = createElement("c-maintenance-kanban", {
+      is: MaintenanceKanban
+    });
+    element.recordId = "a06000000000001AAA";
+    document.body.appendChild(element);
+
+    getTaskStatusOptions.emit(STATUS_OPTIONS);
+    getTasksForProperty.emit(TASKS);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const column = element.shadowRoot.querySelector("c-kanban-column");
+    column.dispatchEvent(
+      new CustomEvent("taskmove", {
+        detail: { taskId: "a0X000000000001AAA", newStatus: "In Progress" }
+      })
+    );
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(element.shadowRoot.textContent).toContain(
+      "No tenés permiso para mover esta tarea."
+    );
   });
 });

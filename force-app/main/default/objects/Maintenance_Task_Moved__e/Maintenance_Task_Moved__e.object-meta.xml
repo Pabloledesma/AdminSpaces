@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description
+  >Se publica desde MaintenanceTaskBoardController.updateTaskStatus cada vez que se mueve una Maintenance_Task__c a un nuevo estado. El LWC maintenanceKanban se suscribe a este evento (vía empApi) para que, si otro usuario tiene el mismo tablero de mantenimiento abierto en otra sesión, su pantalla se refresque sola sin necesidad de recargar la página. Historia 5.4.</description>
+    <eventType>HighVolume</eventType>
+    <label>Maintenance Task Moved</label>
+    <pluralLabel>Maintenance Task Moved Events</pluralLabel>
+    <publishBehavior>PublishImmediately</publishBehavior>
+</CustomObject>
