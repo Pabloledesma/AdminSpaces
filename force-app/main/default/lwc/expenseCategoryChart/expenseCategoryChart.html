@@ -1,0 +1,23 @@
+<template>
+  <lightning-card title="Gastos por categoría">
+    <div class="slds-p-horizontal_medium">
+      <template lwc:if={hasCategories}>
+        <template for:each={categories} for:item="cat">
+          <div
+            key={cat.category}
+            data-id="category-bar"
+            class="slds-m-bottom_small"
+          >
+            <p>{cat.category}: {cat.total}</p>
+            <div class="slds-progress-bar" style="background: #e5e5e5">
+              <div style={cat.barStyle} class="slds-progress-bar__value"></div>
+            </div>
+          </div>
+        </template>
+      </template>
+      <template lwc:else>
+        <p>Todavía no hay gastos cargados para esta propiedad.</p>
+      </template>
+    </div>
+  </lightning-card>
+</template>

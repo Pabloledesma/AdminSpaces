@@ -13,6 +13,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FinanceController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>ReservationCreationController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -235,6 +239,10 @@
     </tabSettings>
     <tabSettings>
         <tab>Reservation__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>financesDashboard</tab>
         <visibility>Visible</visibility>
     </tabSettings>
 </PermissionSet>

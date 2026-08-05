@@ -1,0 +1,27 @@
+<template>
+  <div class="slds-grid slds-wrap slds-gutters slds-p-around_small">
+    <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+      <lightning-card title="Tablero de Finanzas" icon-name="standard:budget">
+        <div class="slds-p-horizontal_medium">
+          <lightning-combobox
+            name="propertySelector"
+            label="Seleccionar Propiedad"
+            value={selectedPropertyId}
+            options={propertyOptions}
+            placeholder="Elige una propiedad para ver sus finanzas"
+            onchange={handlePropertyChange}
+          >
+          </lightning-combobox>
+        </div>
+      </lightning-card>
+    </div>
+
+    <template lwc:if={selectedPropertyId}>
+      <div class="slds-col slds-size_1-of-1">
+        <c-expense-category-chart
+          property-id={selectedPropertyId}
+        ></c-expense-category-chart>
+      </div>
+    </template>
+  </div>
+</template>
