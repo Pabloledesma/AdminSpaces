@@ -1,0 +1,54 @@
+name: CI
+
+# Corre en cada push (el repo trabaja sobre ramas feature, no siempre vía PR)
+# y en cada pull request hacia main.
+on:
+  push:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Un push nuevo sobre la misma rama cancela la corrida anterior, que ya quedó vieja.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, formato y tests LWC
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # npm ci (y no npm install) para instalar exactamente lo del package-lock
+      - name: Instala dependencias
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Formato (Prettier)
+        run: npm run prettier:verify
+
+      - name: Tests unitarios LWC (Jest)
+        run: npm run test:unit -- --coverage
+
+      - name: Guarda el reporte de cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-lwc
+          path: coverage/
+          if-no-files-found: ignore
+# Pendiente (necesita configuración fuera del repo): un job que cree un scratch
+# org, despliegue y corra `sf apex run test`. Requiere autenticar un Dev Hub
+# desde CI vía secreto de GitHub, y que el deploy a un org limpio funcione de
+# punta a punta — ver la nota sobre scratch orgs en el README.

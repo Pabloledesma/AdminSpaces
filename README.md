@@ -1,5 +1,7 @@
 # AdminSpaces — Property Manager
 
+[![CI](https://github.com/Pabloledesma/AdminSpaces/actions/workflows/ci.yml/badge.svg)](https://github.com/Pabloledesma/AdminSpaces/actions/workflows/ci.yml)
+
 Proyecto de portafolio para practicar el ciclo completo de desarrollo en Salesforce: modelo de datos, seguridad, Apex, LWC, Experience Cloud y Agentforce, construido sobre un caso de uso realista de gestión de propiedades en alquiler (habitaciones, reservas, mantenimiento y gastos).
 
 El desarrollo está organizado en **Hitos** con **Historias de Usuario**, documentados en [`docs/property-manager-roadmap.md`](docs/property-manager-roadmap.md). Cada hito construye sobre el anterior: modelo de datos → seguridad → lógica de negocio en Apex → componentes LWC → testing → sitio Experience Cloud → Agentforce.
@@ -117,3 +119,12 @@ Para levantar un scratch org nuevo con la definición incluida en `config/projec
 sf org create scratch --definition-file config/project-scratch-def.json --alias <alias> --set-default
 sf project deploy start --target-org <alias>
 ```
+
+La definición habilita `Communities` y `experienceBundleSettings`, sin lo cual la metadata del Hito 3 (`networks/`, `sites/`, el profile del Guest y las Sharing Rules) ni siquiera despliega. Dos límites conocidos de esa reproducción, para no prometer de más:
+
+- **El contenido del sitio no viaja en el repo.** No hay `digitalExperiences/` en source: lo armado en Experience Builder (páginas, layout, branding) queda solo en el org donde se construyó. Un org nuevo levanta el sitio, no sus páginas.
+- **`RoomCheckoutScheduler` no se agenda solo.** Es una clase `Schedulable` sin nada que la programe: en un org nuevo hay que correr un `System.schedule` a mano, o la Historia 2.3 queda inerte.
+
+## Integración continua
+
+Cada push corre [`.github/workflows/ci.yml`](.github/workflows/ci.yml): ESLint, verificación de formato con Prettier sobre todo el repo y los tests Jest de los LWC con reporte de cobertura. Todo lo que no necesita un org corre en CI; los tests de Apex siguen siendo manuales (`sf apex run test`) porque necesitan autenticar un Dev Hub desde el pipeline — pendiente, anotado en el propio workflow.
