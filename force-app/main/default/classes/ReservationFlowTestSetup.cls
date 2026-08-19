@@ -5,11 +5,11 @@
  */
 @isTest
 public class ReservationFlowTestSetup {
-    @TestSetup
-    static void makeData() {
-        Property__c prop = TestDataFactory.createProperty();
-        insert prop;
-        Room__c room = TestDataFactory.createRoomWithRate(prop.Id, 10);
-        insert room;
-    }
+  @TestSetup
+  static void makeData() {
+    Property__c prop = TestDataFactory.createProperty();
+    insert prop;
+    Room__c room = TestDataFactory.createRoomWithRate(prop.Id, 10);
+    insert room;
+  }
 }

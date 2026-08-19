@@ -1,7 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Status__c</fullName>
-    <description>Estado operativo actual de la habitación. Valores: Available, Occupied, Maintenance, Cleaning. Se muestra en el Compact Layout y en las tarjetas del LWC.</description>
+    <description
+  >Estado operativo actual de la habitación. Valores: Available, Occupied, Maintenance, Cleaning. Se muestra en el Compact Layout y en las tarjetas del LWC.</description>
     <label>Status</label>
     <required>false</required>
     <trackTrending>false</trackTrending>

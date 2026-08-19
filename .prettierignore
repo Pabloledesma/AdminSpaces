@@ -9,3 +9,5 @@
 .vscode
 
 coverage/
+# Skills vendorizadas (sf-skills): son archivos de terceros, no código del proyecto
+.agents/

@@ -1,7 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Room_Type__c</fullName>
-    <description>Tipo de habitación. Valores: Single, Double, Suite, Studio. Se usa para mostrar el tipo en las tarjetas del LWC y para filtrar disponibilidad por tipo.</description>
+    <description
+  >Tipo de habitación. Valores: Single, Double, Suite, Studio. Se usa para mostrar el tipo en las tarjetas del LWC y para filtrar disponibilidad por tipo.</description>
     <label>Room Type</label>
     <required>false</required>
     <trackTrending>false</trackTrending>

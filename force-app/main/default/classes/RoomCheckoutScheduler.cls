@@ -16,50 +16,51 @@
  * con allOrNone=false no frena el resto del batch) y queda para resolución manual.
  */
 public with sharing class RoomCheckoutScheduler implements Schedulable {
+  public void execute(SchedulableContext context) {
+    freeRoomsForCompletedCheckouts();
+    extendUnconfirmedCheckouts();
+  }
 
-    public void execute(SchedulableContext context) {
-        freeRoomsForCompletedCheckouts();
-        extendUnconfirmedCheckouts();
+  private void freeRoomsForCompletedCheckouts() {
+    List<Reservation__c> checkedOutToday = [
+      SELECT Room__c
+      FROM Reservation__c
+      WHERE Check_Out_Date__c = TODAY AND Status__c = 'Checked Out'
+    ];
+
+    Set<Id> roomIds = new Set<Id>();
+    for (Reservation__c reservation : checkedOutToday) {
+      roomIds.add(reservation.Room__c);
     }
 
-    private void freeRoomsForCompletedCheckouts() {
-        List<Reservation__c> checkedOutToday = [
-            SELECT Room__c
-            FROM Reservation__c
-            WHERE Check_Out_Date__c = TODAY AND Status__c = 'Checked Out'
-        ];
-
-        Set<Id> roomIds = new Set<Id>();
-        for (Reservation__c reservation : checkedOutToday) {
-            roomIds.add(reservation.Room__c);
-        }
-
-        if (roomIds.isEmpty()) {
-            return;
-        }
-
-        List<Room__c> roomsToFree = new List<Room__c>();
-        for (Id roomId : roomIds) {
-            roomsToFree.add(new Room__c(Id = roomId, Status__c = 'Available'));
-        }
-        update roomsToFree;
+    if (roomIds.isEmpty()) {
+      return;
     }
 
-    private void extendUnconfirmedCheckouts() {
-        List<Reservation__c> noShowReservations = [
-            SELECT Id, Check_Out_Date__c
-            FROM Reservation__c
-            WHERE Check_Out_Date__c = TODAY AND Status__c IN :ReservationOverlapValidator.BLOCKING_STATUSES
-        ];
-
-        if (noShowReservations.isEmpty()) {
-            return;
-        }
-
-        for (Reservation__c reservation : noShowReservations) {
-            reservation.Check_Out_Date__c = reservation.Check_Out_Date__c.addDays(1);
-        }
-
-        Database.update(noShowReservations, false);
+    List<Room__c> roomsToFree = new List<Room__c>();
+    for (Id roomId : roomIds) {
+      roomsToFree.add(new Room__c(Id = roomId, Status__c = 'Available'));
     }
+    update roomsToFree;
+  }
+
+  private void extendUnconfirmedCheckouts() {
+    List<Reservation__c> noShowReservations = [
+      SELECT Id, Check_Out_Date__c
+      FROM Reservation__c
+      WHERE
+        Check_Out_Date__c = TODAY
+        AND Status__c IN :ReservationOverlapValidator.BLOCKING_STATUSES
+    ];
+
+    if (noShowReservations.isEmpty()) {
+      return;
+    }
+
+    for (Reservation__c reservation : noShowReservations) {
+      reservation.Check_Out_Date__c = reservation.Check_Out_Date__c.addDays(1);
+    }
+
+    Database.update(noShowReservations, false);
+  }
 }

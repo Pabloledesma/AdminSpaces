@@ -1,7 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Category__c</fullName>
-    <description>Categoría del gasto de renovación/mantenimiento. Valores: Materials, Labor, Permits, Furniture, Other. Se usa para agrupar y analizar gastos por tipo en reportes y en el componente LWC de gastos por categoría.</description>
+    <description
+  >Categoría del gasto de renovación/mantenimiento. Valores: Materials, Labor, Permits, Furniture, Other. Se usa para agrupar y analizar gastos por tipo en reportes y en el componente LWC de gastos por categoría.</description>
     <label>Category</label>
     <required>false</required>
     <trackHistory>false</trackHistory>
