@@ -1,0 +1,13 @@
+/*
+ * Color vía styling hook de SLDS con fallback al hex: si el org define el hook,
+ * la barra toma su tema; si no lo define, cae al hex y se ve como hasta ahora.
+ * Lo importante es que el color ya no vive suelto en el HTML, mezclado con el
+ * dato (el `width`), que era lo que hacía la versión anterior.
+ */
+.slds-progress-bar {
+  background: var(--slds-g-color-neutral-base-2, #ecebea);
+}
+
+.slds-progress-bar__value {
+  background: var(--slds-g-color-brand-base-2, #0176d3);
+}

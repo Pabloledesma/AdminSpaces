@@ -2,18 +2,43 @@ import { LightningElement, api, wire } from "lwc";
 import getExpensesByCategory from "@salesforce/apex/FinanceController.getExpensesByCategory";
 
 export default class ExpenseCategoryChart extends LightningElement {
-  @api propertyId;
   categories;
+  error;
+  isLoading = true;
+  _propertyId;
+
+  /**
+   * Getter/setter en vez de campo plano para volver al estado "cargando" cada
+   * vez que el padre cambia de propiedad: sin esto, el spinner solo aparecería
+   * en la primera carga y en los cambios siguientes se verían los datos de la
+   * propiedad anterior hasta que llegara la respuesta nueva.
+   */
+  @api
+  get propertyId() {
+    return this._propertyId;
+  }
+
+  set propertyId(value) {
+    this._propertyId = value;
+    this.isLoading = true;
+  }
 
   @wire(getExpensesByCategory, { propertyId: "$propertyId" })
-  wiredCategories({ data }) {
+  wiredCategories({ data, error }) {
+    this.isLoading = false;
     if (data) {
-      const maxTotal = Math.max(...data.map((c) => c.total), 0);
-      this.categories = data.map((c) => ({
-        category: c.category,
-        total: c.total,
-        barStyle: `width: ${maxTotal ? Math.round((c.total / maxTotal) * 100) : 0}%; background: #1589ee; height: 8px;`
+      const maxTotal = data.reduce((max, cat) => Math.max(max, cat.total), 0);
+      this.categories = data.map((cat) => ({
+        category: cat.category,
+        total: cat.total,
+        barStyle: `width: ${maxTotal ? Math.round((cat.total / maxTotal) * 100) : 0}%`
       }));
+      this.error = undefined;
+    } else if (error) {
+      this.error =
+        error.body?.message ??
+        "No pudimos cargar los gastos de esta propiedad.";
+      this.categories = undefined;
     }
   }
 

@@ -1,22 +1,66 @@
 <template>
   <lightning-card title="Gastos por categoría">
-    <div class="slds-p-horizontal_medium">
-      <template lwc:if={hasCategories}>
-        <template for:each={categories} for:item="cat">
-          <div
-            key={cat.category}
-            data-id="category-bar"
-            class="slds-m-bottom_small"
-          >
-            <p>{cat.category}: {cat.total}</p>
-            <div class="slds-progress-bar" style="background: #e5e5e5">
-              <div style={cat.barStyle} class="slds-progress-bar__value"></div>
-            </div>
-          </div>
-        </template>
+    <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+      <template lwc:if={isLoading}>
+        <div
+          class="slds-is-relative slds-p-vertical_large"
+          data-id="chart-spinner"
+        >
+          <lightning-spinner
+            alternative-text="Cargando gastos"
+            size="small"
+          ></lightning-spinner>
+        </div>
       </template>
+
+      <template lwc:elseif={error}>
+        <p class="slds-text-color_error" role="alert" data-id="chart-error">
+          {error}
+        </p>
+      </template>
+
+      <template lwc:elseif={hasCategories}>
+        <ul>
+          <template for:each={categories} for:item="cat">
+            <li
+              key={cat.category}
+              data-id="category-bar"
+              class="slds-m-bottom_small"
+            >
+              <div class="slds-grid slds-grid_align-spread">
+                <span>{cat.category}</span>
+                <span class="slds-text-title_bold">
+                  <lightning-formatted-number
+                    value={cat.total}
+                    format-style="currency"
+                  ></lightning-formatted-number>
+                </span>
+              </div>
+              <!--
+                La barra es decorativa: el dato completo (categoría + importe)
+                ya está en el texto de arriba, así que aria-hidden evita que el
+                lector de pantalla lo anuncie dos veces. Tampoco lleva
+                role="progressbar": esto compara magnitudes, no mide el avance
+                de una tarea.
+              -->
+              <div
+                class="slds-progress-bar slds-progress-bar_medium"
+                aria-hidden="true"
+              >
+                <span
+                  class="slds-progress-bar__value"
+                  style={cat.barStyle}
+                ></span>
+              </div>
+            </li>
+          </template>
+        </ul>
+      </template>
+
       <template lwc:else>
-        <p>Todavía no hay gastos cargados para esta propiedad.</p>
+        <p data-id="chart-empty">
+          Todavía no hay gastos cargados para esta propiedad.
+        </p>
       </template>
     </div>
   </lightning-card>

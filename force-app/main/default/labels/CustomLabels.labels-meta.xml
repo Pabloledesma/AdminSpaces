@@ -55,4 +55,24 @@
         <value
     >Las fechas se solapan con otra reserva existente para esta habitación.</value>
     </labels>
+    <labels>
+        <fullName>Finance_Expenses_Load_Error</fullName>
+        <categories>AdminSpaces</categories>
+        <language>es</language>
+        <protected>false</protected>
+        <shortDescription
+    >Error de permisos al leer gastos por categoria en FinanceController.</shortDescription>
+        <value
+    >No pudimos cargar los gastos de esta propiedad. Es posible que no tengas permisos sobre Gastos.</value>
+    </labels>
+    <labels>
+        <fullName>Finance_Properties_Load_Error</fullName>
+        <categories>AdminSpaces</categories>
+        <language>es</language>
+        <protected>false</protected>
+        <shortDescription
+    >Error de permisos al leer propiedades en FinanceController.</shortDescription>
+        <value
+    >No pudimos cargar las propiedades. Es posible que no tengas permisos sobre Propiedades.</value>
+    </labels>
 </CustomLabels>

@@ -4,6 +4,7 @@ import getProperties from "@salesforce/apex/FinanceController.getProperties";
 export default class FinancesDashboard extends LightningElement {
   propertyOptions = [];
   selectedPropertyId;
+  error;
 
   @wire(getProperties)
   wiredProperties({ error, data }) {
@@ -12,8 +13,13 @@ export default class FinancesDashboard extends LightningElement {
         label: prop.Name,
         value: prop.Id
       }));
+      this.error = undefined;
     } else if (error) {
-      console.error("Error fetching properties", error);
+      // Antes esto era un console.error: el usuario veía un combobox vacío,
+      // indistinguible de "todavía no hay propiedades cargadas".
+      this.error = error.body?.message ?? "No pudimos cargar las propiedades.";
+      this.propertyOptions = [];
+      this.selectedPropertyId = undefined;
     }
   }
 

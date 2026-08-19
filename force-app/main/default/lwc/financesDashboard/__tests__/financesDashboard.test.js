@@ -2,6 +2,13 @@ import { createElement } from "lwc";
 import FinancesDashboard from "c/financesDashboard";
 import getProperties from "@salesforce/apex/FinanceController.getProperties";
 
+// Igual que en expenseCategoryChart: el mensaje del servidor (texto del Custom
+// Label Finance_Properties_Load_Error) tiene que ser distinto del fallback del
+// componente, si no el test no distingue "propaga" de "inventa".
+const MENSAJE_DEL_SERVIDOR =
+  "No pudimos cargar las propiedades. Es posible que no tengas permisos sobre Propiedades.";
+const MENSAJE_FALLBACK = "No pudimos cargar las propiedades.";
+
 describe("c-finances-dashboard", () => {
   afterEach(() => {
     while (document.body.firstChild) {
@@ -79,26 +86,64 @@ describe("c-finances-dashboard", () => {
     expect(chart.propertyId).toBe("prop1");
   });
 
-  it("maneja el error del servidor e ignora propiedades vacías (caso negativo)", async () => {
+  it("muestra el error del servidor en vez de un combobox vacío (caso negativo)", async () => {
     const element = createElement("c-finances-dashboard", {
       is: FinancesDashboard
     });
     document.body.appendChild(element);
 
-    // Espiamos a console.error para no imprimir errores reales durante el test
-    const consoleSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
-
-    // Simulamos un error devuelto por Apex
-    getProperties.error("Error interno del servidor");
+    getProperties.error({ message: MENSAJE_DEL_SERVIDOR });
 
     await Promise.resolve();
 
-    const combobox = element.shadowRoot.querySelector("lightning-combobox");
-    expect(combobox.options.length).toBe(0);
-    expect(consoleSpy).toHaveBeenCalled();
+    const errorMessage = element.shadowRoot.querySelector(
+      '[data-id="properties-error"]'
+    );
+    expect(errorMessage.textContent).toContain(MENSAJE_DEL_SERVIDOR);
+    // El combobox vacío era un callejón sin salida: se reemplaza por el error
+    expect(element.shadowRoot.querySelector("lightning-combobox")).toBeNull();
+  });
 
-    consoleSpy.mockRestore();
+  it("usa un mensaje propio si el error del servidor no trae message", async () => {
+    const element = createElement("c-finances-dashboard", {
+      is: FinancesDashboard
+    });
+    document.body.appendChild(element);
+
+    getProperties.error({});
+    await Promise.resolve();
+
+    const texto = element.shadowRoot.querySelector(
+      '[data-id="properties-error"]'
+    ).textContent;
+    expect(texto).toContain(MENSAJE_FALLBACK);
+    expect(texto).not.toContain("Es posible que no tengas permisos");
+  });
+
+  it("desmonta el gráfico si el wire falla después de haber cargado propiedades", async () => {
+    const element = createElement("c-finances-dashboard", {
+      is: FinancesDashboard
+    });
+    document.body.appendChild(element);
+
+    getProperties.emit([{ Id: "prop1", Name: "Propiedad Test 1" }]);
+    await Promise.resolve();
+    element.shadowRoot
+      .querySelector("lightning-combobox")
+      .dispatchEvent(new CustomEvent("change", { detail: { value: "prop1" } }));
+    await Promise.resolve();
+    expect(
+      element.shadowRoot.querySelector("c-expense-category-chart")
+    ).not.toBeNull();
+
+    // Al fallar la carga de propiedades, la selección anterior deja de ser
+    // válida: el gráfico no puede quedar mostrando datos de una propiedad que
+    // ya no se puede ni elegir.
+    getProperties.error({ message: MENSAJE_DEL_SERVIDOR });
+    await Promise.resolve();
+
+    expect(
+      element.shadowRoot.querySelector("c-expense-category-chart")
+    ).toBeNull();
   });
 });
