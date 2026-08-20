@@ -14,6 +14,7 @@ export default class RoomAvailabilityChecker extends LightningElement {
   selectedGuestId;
   reservationCreated;
   createError;
+  refreshError;
 
   blockedRangesResult;
 
@@ -84,6 +85,8 @@ export default class RoomAvailabilityChecker extends LightningElement {
   async handleCreateReservation() {
     this.createError = undefined;
     this.reservationCreated = false;
+
+    let creada = false;
     try {
       await createReservation({
         roomId: this.selectedRoomId,
@@ -91,12 +94,28 @@ export default class RoomAvailabilityChecker extends LightningElement {
         checkIn: this.checkinDate,
         checkOut: this.checkoutDate
       });
-      this.reservationCreated = true;
-      this.isAvailable = undefined;
-      this.selectedGuestId = undefined;
-      await refreshApex(this.blockedRangesResult);
+      creada = true;
     } catch (error) {
       this.createError = error.body?.message ?? "Ocurrió un error inesperado.";
+    }
+
+    if (!creada) {
+      return;
+    }
+
+    this.reservationCreated = true;
+    this.isAvailable = undefined;
+    this.selectedGuestId = undefined;
+
+    // La reserva ya existe en la base: si falla el refresco de las fechas
+    // bloqueadas, lo único desactualizado es la pantalla. Dejarlo dentro del
+    // try anterior mostraba el cartel de éxito y el de error a la vez.
+    try {
+      await refreshApex(this.blockedRangesResult);
+      this.refreshError = undefined;
+    } catch {
+      this.refreshError =
+        "Creamos la reserva, pero no pudimos actualizar las fechas ya reservadas. Recargá la página para verlas al día.";
     }
   }
 }

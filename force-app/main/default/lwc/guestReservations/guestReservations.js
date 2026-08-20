@@ -14,6 +14,7 @@ export default class GuestReservations extends LightningElement {
   savedReservationId;
   cancelingReservationId;
   cancelErrors = {};
+  refreshError;
 
   @wire(getMyReservations)
   wiredReservations(result) {
@@ -86,15 +87,14 @@ export default class GuestReservations extends LightningElement {
     this.savingReservationId = reservationId;
     delete this.saveErrors[reservationId];
 
+    let guardado = false;
     try {
       await updateMyReservationDates({
         reservationId,
         newCheckin: changes.checkin ?? null,
         newCheckout: changes.checkout ?? null
       });
-      await refreshApex(this.wiredResult);
-      this.savedReservationId = reservationId;
-      delete this.pendingChanges[reservationId];
+      guardado = true;
     } catch (error) {
       this.saveErrors = {
         ...this.saveErrors,
@@ -103,6 +103,22 @@ export default class GuestReservations extends LightningElement {
     } finally {
       this.savingReservationId = undefined;
     }
+
+    if (!guardado) {
+      return;
+    }
+
+    // El cambio ya está aplicado en el servidor. Marcarlo como guardado y
+    // limpiar los cambios pendientes no puede depender de que el refresco de
+    // la lista funcione: si el refresco falla, el huésped vería un error sobre
+    // un cambio que sí se guardó, con sus ediciones todavía en pantalla, y lo
+    // más probable es que lo reintente.
+    this.savedReservationId = reservationId;
+    delete this.pendingChanges[reservationId];
+
+    await this.refreshList(
+      "Guardamos tu cambio, pero no pudimos actualizar la vista. Recargá la página para verla al día."
+    );
   }
 
   async handleCancel(event) {
@@ -119,9 +135,10 @@ export default class GuestReservations extends LightningElement {
     this.cancelingReservationId = reservationId;
     delete this.cancelErrors[reservationId];
 
+    let cancelada = false;
     try {
       await cancelMyReservation({ reservationId });
-      await refreshApex(this.wiredResult);
+      cancelada = true;
     } catch (error) {
       this.cancelErrors = {
         ...this.cancelErrors,
@@ -129,6 +146,28 @@ export default class GuestReservations extends LightningElement {
       };
     } finally {
       this.cancelingReservationId = undefined;
+    }
+
+    if (!cancelada) {
+      return;
+    }
+
+    await this.refreshList(
+      "Cancelamos tu reserva, pero no pudimos actualizar la vista. Recargá la página para verla al día."
+    );
+  }
+
+  /**
+   * El refresco de la lista es un paso aparte de la mutación: su resultado no
+   * cambia si la mutación funcionó o no, solo si lo que se ve en pantalla está
+   * al día.
+   */
+  async refreshList(mensajeSiFalla) {
+    try {
+      await refreshApex(this.wiredResult);
+      this.refreshError = undefined;
+    } catch {
+      this.refreshError = mensajeSiFalla;
     }
   }
 }

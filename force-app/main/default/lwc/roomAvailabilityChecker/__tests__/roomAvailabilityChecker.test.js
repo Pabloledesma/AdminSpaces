@@ -2,6 +2,7 @@ import { createElement } from "lwc";
 import RoomAvailabilityChecker from "c/roomAvailabilityChecker";
 import checkAvailability from "@salesforce/apex/RoomAvailabilityController.checkAvailability";
 import createReservation from "@salesforce/apex/ReservationCreationController.createReservation";
+import { refreshApex } from "@salesforce/apex";
 
 jest.mock(
   "@salesforce/apex",
@@ -10,6 +11,14 @@ jest.mock(
   }),
   { virtual: true }
 );
+
+// refreshApex es un mock compartido por todo el archivo: si un test lo deja
+// rechazando, los siguientes lo heredan (clearAllMocks limpia llamadas, no
+// implementaciones). Cada test arranca con un refresco que funciona.
+beforeEach(() => {
+  refreshApex.mockReset();
+  refreshApex.mockResolvedValue(undefined);
+});
 
 describe("c-room-availability-checker", () => {
   afterEach(() => {
@@ -232,5 +241,61 @@ describe("c-room-availability-checker", () => {
     expect(element.shadowRoot.textContent).not.toContain(
       "Reserva creada con éxito"
     );
+  });
+
+  it("un refresco fallido no puede decir que la reserva no se creó", async () => {
+    checkAvailability.mockResolvedValue(true);
+    createReservation.mockResolvedValue("a01000000000001AAA");
+    refreshApex.mockRejectedValue({ body: undefined });
+
+    const element = createElement("c-room-availability-checker", {
+      is: RoomAvailabilityChecker
+    });
+    element.recordId = "a06000000000001AAA";
+    document.body.appendChild(element);
+
+    element.shadowRoot.querySelector("c-room-picker").dispatchEvent(
+      new CustomEvent("roomselect", {
+        detail: { roomId: "a05000000000001AAA" }
+      })
+    );
+    element.shadowRoot.querySelector("c-date-range-picker").dispatchEvent(
+      new CustomEvent("daterangechange", {
+        detail: { checkIn: "2026-08-01", checkOut: "2026-08-05" }
+      })
+    );
+    await Promise.resolve();
+
+    const [checkButton] =
+      element.shadowRoot.querySelectorAll("lightning-button");
+    checkButton.dispatchEvent(new CustomEvent("click"));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    element.shadowRoot.querySelector("lightning-record-picker").dispatchEvent(
+      new CustomEvent("change", {
+        detail: { recordId: "003000000000001AAA" }
+      })
+    );
+    await Promise.resolve();
+
+    element.shadowRoot
+      .querySelectorAll("lightning-button")[1]
+      .dispatchEvent(new CustomEvent("click"));
+    for (let i = 0; i < 6; i++) {
+      // eslint-disable-next-line no-await-in-loop
+      await Promise.resolve();
+    }
+
+    // La reserva existe: no puede aparecer el error de creación...
+    expect(createReservation).toHaveBeenCalledTimes(1);
+    const errores = Array.from(
+      element.shadowRoot.querySelectorAll(".slds-text-color_error")
+    ).map((p) => p.textContent);
+    expect(errores).not.toContain("Ocurrió un error inesperado.");
+    // ...y sí el aviso de que lo desactualizado es la pantalla.
+    expect(
+      element.shadowRoot.querySelector('[data-id="refresh-error"]').textContent
+    ).toContain("Creamos la reserva");
   });
 });

@@ -1,5 +1,14 @@
 <template>
   <div class="slds-p-around_medium">
+    <template lwc:if={refreshError}>
+      <div
+        class="slds-text-color_error slds-m-bottom_small"
+        role="alert"
+        data-id="refresh-error"
+      >
+        {refreshError}
+      </div>
+    </template>
     <template lwc:if={error}>
       <div data-id="error-state" class="slds-text-color_error">
         No pudimos cargar tu reserva. Intentá de nuevo más tarde.

@@ -47,7 +47,13 @@
       </template>
 
       <template lwc:if={createError}>
-        <p class="slds-text-color_error">{createError}</p>
+        <p class="slds-text-color_error" role="alert">{createError}</p>
+      </template>
+
+      <template lwc:if={refreshError}>
+        <p class="slds-text-color_error" role="alert" data-id="refresh-error">
+          {refreshError}
+        </p>
       </template>
     </div>
   </lightning-card>

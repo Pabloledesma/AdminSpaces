@@ -13,6 +13,14 @@ jest.mock(
   { virtual: true }
 );
 
+// refreshApex es un mock compartido por todo el archivo: si un test lo deja
+// rechazando, los siguientes lo heredan (clearAllMocks limpia llamadas, no
+// implementaciones). Cada test arranca con un refresco que funciona.
+beforeEach(() => {
+  refreshApex.mockReset();
+  refreshApex.mockResolvedValue(undefined);
+});
+
 const MOCK_RESERVATIONS = [
   {
     Id: "a01000000000001AAA",
@@ -111,6 +119,41 @@ describe("guardar fechas de la reserva", () => {
     );
     expect(successMessage).not.toBeNull();
     expect(saveButton.disabled).toBe(true);
+  });
+
+  it("un refresco fallido no puede decir que el guardado falló", async () => {
+    updateMyReservationDates.mockResolvedValue();
+    refreshApex.mockRejectedValue({ body: undefined });
+    const RESERVATION_ID = MOCK_RESERVATIONS[0].Id;
+
+    const element = createElement("c-guest-reservations", {
+      is: GuestReservations
+    });
+    document.body.appendChild(element);
+    getMyReservationsAdapter.emit(MOCK_RESERVATIONS);
+    await Promise.resolve();
+
+    const saveButton = element.shadowRoot.querySelector(
+      `[data-reservation-id="${RESERVATION_ID}"][data-field="saveButton"]`
+    );
+    saveButton.dispatchEvent(new CustomEvent("click"));
+    for (let i = 0; i < 6; i++) {
+      // eslint-disable-next-line no-await-in-loop
+      await Promise.resolve();
+    }
+
+    // El cambio se aplicó en el servidor: el huésped tiene que ver el éxito...
+    expect(
+      element.shadowRoot.querySelector('[data-id="save-success"]')
+    ).not.toBeNull();
+    // ...y no un error que lo invite a reintentar algo que ya se guardó.
+    expect(
+      element.shadowRoot.querySelector('[data-id="save-error"]')
+    ).toBeNull();
+    // Lo único que falló fue refrescar la vista, y eso es lo que se avisa.
+    expect(
+      element.shadowRoot.querySelector('[data-id="refresh-error"]').textContent
+    ).toContain("no pudimos actualizar la vista");
   });
 
   it("vuelve a habilitarse si el huesped edita de nuevo", async () => {
@@ -294,5 +337,36 @@ describe("cancelar la reserva", () => {
     expect(cancelMyReservation).toHaveBeenCalledWith({
       reservationId: RESERVATION_ID
     });
+  });
+
+  it("un refresco fallido no puede decir que la cancelación falló", async () => {
+    jest.spyOn(window, "confirm").mockReturnValue(true);
+    cancelMyReservation.mockResolvedValue();
+    refreshApex.mockRejectedValue({ body: undefined });
+
+    const RESERVATION_ID = MOCK_RESERVATIONS[0].Id;
+    const element = createElement("c-guest-reservations", {
+      is: GuestReservations
+    });
+    document.body.appendChild(element);
+    getMyReservationsAdapter.emit(MOCK_RESERVATIONS);
+    await Promise.resolve();
+
+    const cancelButton = element.shadowRoot.querySelector(
+      `[data-reservation-id="${RESERVATION_ID}"][data-field="cancelButton"]`
+    );
+    cancelButton.dispatchEvent(new CustomEvent("click"));
+    for (let i = 0; i < 6; i++) {
+      // eslint-disable-next-line no-await-in-loop
+      await Promise.resolve();
+    }
+
+    expect(cancelMyReservation).toHaveBeenCalledTimes(1);
+    expect(
+      element.shadowRoot.querySelector('[data-id="cancel-error"]')
+    ).toBeNull();
+    expect(
+      element.shadowRoot.querySelector('[data-id="refresh-error"]').textContent
+    ).toContain("Cancelamos tu reserva");
   });
 });
