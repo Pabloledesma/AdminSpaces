@@ -84,6 +84,23 @@ _(Lookup, no Master-Detail, porque una tarea puede seguir existiendo aunque camb
 
 ---
 
+## 6. Budget__c
+
+Agregado en la Historia 5.6, después de los cinco objetos originales.
+
+| Campo                 | Tipo                    | Detalles                                                                          |
+| --------------------- | ----------------------- | --------------------------------------------------------------------------------- |
+| Name                  | Auto Number             | `BUD-{0000}`                                                                      |
+| Property\_\_c         | Master-Detail(Property) | Un presupuesto no existe sin su propiedad; hereda el sharing (ControlledByParent) |
+| Start_Date\_\_c       | Date                    | Requerido. Primer mes del período proyectado                                      |
+| End_Date\_\_c         | Date                    | Requerido. Validation Rule `End_After_Start`                                      |
+| Projected_Income\_\_c | Currency(18,2)          | Proyección **congelada** al crear el presupuesto, no un roll-up ni una fórmula    |
+| Is_Demo\_\_c          | Checkbox                | Default = **true**, mismo criterio que el resto                                   |
+
+**Por qué `Projected_Income__c` es un campo común y no una fórmula:** una fórmula se recalcularía sola cada vez que entra una reserva, y entonces el presupuesto dejaría de ser la decisión que se tomó aquel día. El valor lo escribe `BudgetController.createBudget` una única vez, a partir de lo que devuelve `RevenueProjectionService`.
+
+**Por qué no hay objeto de ingresos:** ver la nota de la Historia 5.5 en el roadmap — el ingreso ya es la revenue de `Reservation__c.Total_Amount__c`, y duplicarlo en otro objeto habría creado dos fuentes de verdad.
+
 ## Checklist de Page Layouts / Compact Layouts
 
 - [ ] Agregar los Roll-Up Summary Fields después de crear los objetos hijos (no se pueden crear antes)

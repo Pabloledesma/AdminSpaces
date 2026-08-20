@@ -19,4 +19,30 @@ public inherited sharing class ExpenseSelector {
       GROUP BY Category__c
     ];
   }
+
+  /**
+   * Historia 5.6: gastos de la propiedad dentro de una ventana de fechas, para
+   * comparar contra lo presupuestado. Devuelve los registros (no un SUM) porque
+   * el caller reparte un solo resultado entre varios presupuestos con períodos
+   * distintos: así son N presupuestos con 1 query, no N queries.
+   */
+  public static List<Expense__c> getForPropertyInPeriod(
+    Id propertyId,
+    Date startDate,
+    Date endDate
+  ) {
+    if (propertyId == null || startDate == null || endDate == null) {
+      return new List<Expense__c>();
+    }
+
+    return [
+      SELECT Amount__c, Expense_Date__c
+      FROM Expense__c
+      WHERE
+        Property__c = :propertyId
+        AND Expense_Date__c >= :startDate
+        AND Expense_Date__c <= :endDate
+      WITH USER_MODE
+    ];
+  }
 }

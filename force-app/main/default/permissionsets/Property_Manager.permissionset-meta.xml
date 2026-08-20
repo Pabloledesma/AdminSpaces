@@ -24,7 +24,21 @@
         <apexClass>MaintenanceTaskBoardController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
+    <classAccesses>
+        <apexClass>BudgetController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
     <description>Administrador de propiedades</description>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Budget__c.Is_Demo__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Budget__c.Projected_Income__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>Expense__c.Amount__c</field>
@@ -173,6 +187,15 @@
     <hasActivationRequired>false</hasActivationRequired>
     <label>Property Manager</label>
     <license>Salesforce</license>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Budget__c</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>false</allowDelete>

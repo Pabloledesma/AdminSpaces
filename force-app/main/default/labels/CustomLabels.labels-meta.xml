@@ -75,4 +75,43 @@
         <value
     >No pudimos cargar las propiedades. Es posible que no tengas permisos sobre Propiedades.</value>
     </labels>
+    <labels>
+        <fullName>Budget_Property_Required</fullName>
+        <categories>AdminSpaces</categories>
+        <language>es</language>
+        <protected>false</protected>
+        <shortDescription
+    >Falta la propiedad al operar con presupuestos.</shortDescription>
+        <value>Elegí una propiedad para trabajar con presupuestos.</value>
+    </labels>
+    <labels>
+        <fullName>Budget_Invalid_Period</fullName>
+        <categories>AdminSpaces</categories>
+        <language>es</language>
+        <protected>false</protected>
+        <shortDescription
+    >Período inválido en BudgetController.</shortDescription>
+        <value
+    >La fecha de fin del presupuesto debe ser posterior a la de inicio.</value>
+    </labels>
+    <labels>
+        <fullName>Budget_Projection_Error</fullName>
+        <categories>AdminSpaces</categories>
+        <language>es</language>
+        <protected>false</protected>
+        <shortDescription
+    >Error de permisos al proyectar ingresos (Reservation__c).</shortDescription>
+        <value
+    >No pudimos calcular la proyección de ingresos. Es posible que no tengas permisos sobre Reservas.</value>
+    </labels>
+    <labels>
+        <fullName>Budget_Load_Error</fullName>
+        <categories>AdminSpaces</categories>
+        <language>es</language>
+        <protected>false</protected>
+        <shortDescription
+    >Error de permisos al leer presupuestos (Budget__c).</shortDescription>
+        <value
+    >No pudimos cargar los presupuestos de esta propiedad. Es posible que no tengas permisos sobre Presupuestos.</value>
+    </labels>
 </CustomLabels>

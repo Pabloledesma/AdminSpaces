@@ -84,6 +84,12 @@ describe("c-finances-dashboard", () => {
     const chart = element.shadowRoot.querySelector("c-expense-category-chart");
     expect(chart).not.toBeNull();
     expect(chart.propertyId).toBe("prop1");
+
+    // La Historia 5.6 suma el planificador de presupuesto a la misma tab,
+    // alimentado por la misma selección de propiedad.
+    const planner = element.shadowRoot.querySelector("c-budget-planner");
+    expect(planner).not.toBeNull();
+    expect(planner.propertyId).toBe("prop1");
   });
 
   it("muestra el error del servidor en vez de un combobox vacío (caso negativo)", async () => {

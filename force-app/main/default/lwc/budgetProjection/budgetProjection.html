@@ -1,0 +1,52 @@
+<template>
+  <template lwc:if={hasMonths}>
+    <table
+      class="slds-table slds-table_bordered slds-table_cell-buffer"
+      aria-label="Proyección de ingresos mes a mes"
+    >
+      <thead>
+        <tr class="slds-line-height_reset">
+          <th scope="col">Mes</th>
+          <th scope="col">Origen</th>
+          <th scope="col" class="slds-text-align_right">Ingreso proyectado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <template for:each={months} for:item="month">
+          <tr key={month.label} data-id="month-row">
+            <th scope="row">{month.label}</th>
+            <td>
+              <span class={month.claseOrigen} data-id="month-origin"
+                >{month.origen}</span
+              >
+            </td>
+            <td class="slds-text-align_right">
+              <lightning-formatted-number
+                value={month.amount}
+                format-style="currency"
+              ></lightning-formatted-number>
+            </td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+
+    <p
+      class="slds-p-top_small slds-text-align_right"
+      data-id="projection-total"
+    >
+      <strong>Total proyectado: </strong>
+      <lightning-formatted-number
+        value={projection.total}
+        format-style="currency"
+      ></lightning-formatted-number>
+    </p>
+    <p class="slds-text-body_small slds-text-align_right" data-id="average">
+      Promedio histórico usado para los meses sin reservas:
+      <lightning-formatted-number
+        value={projection.historicalMonthlyAverage}
+        format-style="currency"
+      ></lightning-formatted-number>
+    </p>
+  </template>
+</template>

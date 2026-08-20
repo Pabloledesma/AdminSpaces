@@ -28,10 +28,13 @@
     </div>
 
     <template lwc:if={selectedPropertyId}>
-      <div class="slds-col slds-size_1-of-1">
+      <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
         <c-expense-category-chart
           property-id={selectedPropertyId}
         ></c-expense-category-chart>
+      </div>
+      <div class="slds-col slds-size_1-of-1">
+        <c-budget-planner property-id={selectedPropertyId}></c-budget-planner>
       </div>
     </template>
   </div>

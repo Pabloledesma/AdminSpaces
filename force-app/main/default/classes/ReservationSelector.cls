@@ -163,4 +163,45 @@ public inherited sharing class ReservationSelector {
     Object total = result.get('total');
     return total == null ? 0 : (Decimal) total;
   }
+
+  /**
+   * Historia 5.6: ingreso agrupado por mes de check-in, en una sola query.
+   * La alternativa (una query por mes) escala pésimo: un presupuesto a 5 años
+   * serían 60 SOQL contra el límite de 100 de la transacción.
+   *
+   * Usa el mismo criterio de "ingreso" que la Historia 5.1 (todo lo que no
+   * está Cancelled), para que el dashboard y el presupuesto no cuenten cosas
+   * distintas. `WITH USER_MODE` como el resto del código nuevo: el sharing ya
+   * lo aporta el caller (`with sharing`), esto suma objeto y FLS.
+   *
+   * @param propertyId Propiedad dueña de las habitaciones
+   * @param startDate Primer día a considerar (inclusive)
+   * @param endDate Último día a considerar (inclusive)
+   * @return AggregateResults con yr, mth y total; lista vacía si falta algún parámetro
+   */
+  public static List<AggregateResult> getRevenueByMonthForProperty(
+    Id propertyId,
+    Date startDate,
+    Date endDate
+  ) {
+    if (propertyId == null || startDate == null || endDate == null) {
+      return new List<AggregateResult>();
+    }
+
+    return [
+      SELECT
+        CALENDAR_YEAR(Check_In_Date__c) yr,
+        CALENDAR_MONTH(Check_In_Date__c) mth,
+        SUM(Total_Amount__c) total
+      FROM Reservation__c
+      WHERE
+        Room__r.Property__c = :propertyId
+        AND Check_In_Date__c >= :startDate
+        AND Check_In_Date__c <= :endDate
+        AND Status__c != 'Cancelled'
+      WITH USER_MODE
+      GROUP BY CALENDAR_YEAR(Check_In_Date__c), CALENDAR_MONTH(Check_In_Date__c)
+      ORDER BY CALENDAR_YEAR(Check_In_Date__c), CALENDAR_MONTH(Check_In_Date__c)
+    ];
+  }
 }

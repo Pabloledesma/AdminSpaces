@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>End_After_Start</fullName>
+    <active>true</active>
+    <errorConditionFormula
+  >End_Date__c &lt;= Start_Date__c</errorConditionFormula>
+    <errorMessage
+  >La fecha de fin del presupuesto debe ser posterior a la de inicio.</errorMessage>
+    <errorDisplayField>End_Date__c</errorDisplayField>
+</ValidationRule>

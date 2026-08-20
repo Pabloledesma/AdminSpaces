@@ -8,7 +8,7 @@ El desarrollo está organizado en **Hitos** con **Historias de Usuario**, docume
 
 ## Modelo de datos
 
-5 objetos custom con relaciones Master-Detail (`Property__c → Room__c → Reservation__c`, `Property__c → Expense__c`) y Lookup (`Maintenance_Task__c`). Documentado en detalle, incluyendo el diagrama entidad-relación y el razonamiento de cada decisión de diseño, en [`docs/property-manager-data-model.md`](docs/property-manager-data-model.md).
+6 objetos custom con relaciones Master-Detail (`Property__c → Room__c → Reservation__c`, `Property__c → Expense__c`) y Lookup (`Maintenance_Task__c`). Documentado en detalle, incluyendo el diagrama entidad-relación y el razonamiento de cada decisión de diseño, en [`docs/property-manager-data-model.md`](docs/property-manager-data-model.md).
 
 | Objeto                | Relación                                                | Propósito                        |
 | --------------------- | ------------------------------------------------------- | -------------------------------- |
@@ -17,6 +17,7 @@ El desarrollo está organizado en **Hitos** con **Historias de Usuario**, docume
 | `Reservation__c`      | Master-Detail → `Room__c`, Lookup → `Contact` (huésped) | Reservas de huéspedes            |
 | `Maintenance_Task__c` | Lookup → `Property__c`, `Room__c`                       | Tareas de mantenimiento/limpieza |
 | `Expense__c`          | Master-Detail → `Property__c`                           | Gastos de renovación/operación   |
+| `Budget__c`           | Master-Detail → `Property__c`                           | Presupuesto de remodelación      |
 
 Todos los objetos tienen un campo `Is_Demo__c` (default `true`), pensado para las Sharing Rules del futuro Guest User del sitio Experience Cloud: solo se expondrán públicamente los registros marcados como demo, nunca el objeto completo.
 
@@ -58,6 +59,8 @@ ReservationTriggerHandler   (orquesta antes de insert/update, sin lógica de neg
 
 **`ReservationFlow`** (Record-Triggered Flow con Scheduled Path): crea una `Maintenance_Task__c` de limpieza un día antes de cada checkout. Se resolvió con Flow en vez de Apex porque es una automatización puramente basada en fecha, sin necesidad del batch/query propio de un Schedulable — la lógica de solapamiento y precio (Historias 2.1/2.2) se mantuvo en Apex a propósito, ya que un Flow _before-save_ no puede comparar registros entre sí dentro del mismo batch de inserción.
 
+**`RevenueProjectionService`** (Historia 5.6): la proyección de ingresos, separada del controller por el mismo criterio SOLID que `ReservationOverlapValidator` — no hace DML, no conoce `Budget__c`, solo calcula. Dos decisiones que vale la pena mirar: el ingreso del período se trae con **una sola query agregada** (`GROUP BY CALENDAR_YEAR/CALENDAR_MONTH`) en vez de una por mes, porque un presupuesto a cinco años serían 60 SOQL contra el límite de 100; y un mes cuyo `SUM(Total_Amount__c)` vuelve `null` (hay reservas, pero ninguna con importe) se trata como **ausencia de dato** y cae al promedio, no como un ingreso de cero — un caso que apareció recién al correr el cálculo contra los datos reales del org, no en los tests.
+
 ## Componentes LWC
 
 **`guestReservations`** (Historias 4.2, 4.3 y 4.4): componente del portal autenticado que muestra al huésped el detalle de su propia reserva (habitación, fechas, monto, estado) vía `@wire` a `getMyReservations`, le permite modificar las fechas de check-in/check-out (`updateMyReservationDates`) y cancelarla (`cancelMyReservation`, con confirmación previa) — ambas llamadas imperativas, no vía Lightning Data Service, ya que `Reservation__c` no tiene ningún camino de sharing declarativo viable para esto (ver roadmap). Maneja los estados de lectura (datos/vacío/error) y de cada mutación (deshabilitado mientras guarda/cancela, mensaje de éxito, mensaje de error, reactivación al editar de nuevo), todo cubierto por su test Jest (`__tests__/guestReservations.test.js`), sin fase de testing separada.
@@ -69,6 +72,8 @@ ReservationTriggerHandler   (orquesta antes de insert/update, sin lógica de neg
 **Familia `maintenanceKanban`** (Historia 5.4): tablero kanban de `Maintenance_Task__c` con 3 niveles — `maintenanceKanban` (padre, orquesta) → `kanbanColumn` (una por estado) → `kanbanCard` (una por tarea). Construida con TDD de abajo hacia arriba (primero la hoja, al final el orquestador). El evento de "mover tarea" viaja hijo→padre en cada nivel con re-dispatch explícito en `kanbanColumn` (no depende de que el evento cruce shadow DOM solo), y `maintenanceKanban` calcula por tarea el estado anterior/siguiente (`moveTargets`) según el orden del picklist ya expuesto por `MaintenanceTaskStatusService` — las tarjetas no conocen ninguna regla de negocio. Sincronización en tiempo real entre sesiones vía **Platform Events**: `MaintenanceTaskEventPublisher` publica `Maintenance_Task_Moved__e` desde `MaintenanceTaskBoardController.updateTaskStatus`, y cada `maintenanceKanban` se suscribe vía `lightning/empApi` para refrescarse solo cuando otro usuario mueve una tarea de la misma propiedad — probado en vivo con dos sesiones simultáneas (Login As). Detalle completo, incluida la saga de permisos (`classAccesses`, `modifyAllRecords`, permisos de objeto sobre el Platform Event) y un bug real de dos métodos JS con el mismo nombre, en el roadmap.
 
 **`financesDashboard` + `expenseCategoryChart`** (Historia 5.5): la tab "Finanzas" — Custom Tab propia, no la Record Page de `Property__c` — con un padre que elige propiedad (`lightning-combobox`, `@wire` a `FinanceController.getProperties`) y un hijo que dibuja el gasto por categoría. La agregación la hace la base de datos (`ExpenseSelector`, `SUM(Amount__c)` + `GROUP BY Category__c`), no Apex recorriendo registros. El hijo distingue los tres estados que antes se confundían — cargando, error y vacío: un fallo del servidor se veía igual que "todavía no hay gastos" — y muestra los importes con `lightning-formatted-number` en formato moneda. Las barras son decorativas (`aria-hidden="true"`, sin `role="progressbar"`: comparan magnitudes, no miden el avance de una tarea), porque el dato completo ya está en el texto de cada fila.
+
+**Familia `budgetPlanner`** (Historia 5.6): planificador de presupuesto en la misma tab "Finanzas" — `budgetPlanner` (orquestador) → `budgetProjection` y `budgetList` (presentacionales). El orquestador combina los dos estilos de llamada a propósito: `previewProjection` y `createBudget` son **imperativas** porque las dispara el usuario, mientras que la lista de presupuestos existentes es un `@wire` que se refresca con `refreshApex` después de guardar. La regla de negocio no vive en el LWC sino en `RevenueProjectionService`: proyecta mes a mes y resuelve cada mes con el dato más confiable que tenga — la suma real de las reservas de ese mes si existen, o el promedio mensual de los últimos 12 meses si no. `budgetProjection` solo distingue visualmente un origen del otro; `budgetList` cruza lo proyectado contra el gasto real del período y pinta en rojo el presupuesto que se pasó.
 
 ## Testing
 
@@ -88,7 +93,7 @@ Estado actual por hito (detalle completo con historias en [`docs/property-manage
 - 🟡 **Hito 2** — Lógica de negocio en Apex y Flow (no overbooking, cálculo de total, liberación/no-show de habitaciones y tarea de limpieza automática listos)
 - ✅ **Hito 3** — Sitio Experience Cloud (publicado; Guest User anónimo viendo demo data)
 - ✅ **Hito 4** — Portal de autoservicio del huésped (login/registro, ver/editar/cancelar la propia reserva)
-- 🟡 **Hito 5** — Componentes LWC (dashboard de propiedad, chequeo de disponibilidad, creación de reserva, kanban de mantenimiento con Platform Events y gráfico de gastos por categoría listos; falta la historia 5.6, el presupuesto de remodelación)
+- ✅ **Hito 5** — Componentes LWC (dashboard de propiedad, chequeo de disponibilidad, creación de reserva, kanban de mantenimiento con Platform Events, gráfico de gastos por categoría y presupuesto de remodelación con proyección de ingresos)
 - ⬜ **Hito 6** — Agentforce
 
 ## Desarrollo asistido por IA

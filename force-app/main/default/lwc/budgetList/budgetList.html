@@ -1,0 +1,59 @@
+<template>
+  <template lwc:if={hasBudgets}>
+    <table
+      class="slds-table slds-table_bordered slds-table_cell-buffer"
+      aria-label="Presupuestos de la propiedad"
+    >
+      <thead>
+        <tr class="slds-line-height_reset">
+          <th scope="col">Presupuesto</th>
+          <th scope="col">Período</th>
+          <th scope="col" class="slds-text-align_right">Proyectado</th>
+          <th scope="col" class="slds-text-align_right">Gastado</th>
+          <th scope="col" class="slds-text-align_right">Disponible</th>
+        </tr>
+      </thead>
+      <tbody>
+        <template for:each={rows} for:item="budget">
+          <tr key={budget.id} data-id="budget-row">
+            <th scope="row">{budget.name}</th>
+            <td>
+              <lightning-formatted-date-time
+                value={budget.startDate}
+                time-zone="UTC"
+              ></lightning-formatted-date-time>
+              →
+              <lightning-formatted-date-time
+                value={budget.endDate}
+                time-zone="UTC"
+              ></lightning-formatted-date-time>
+            </td>
+            <td class="slds-text-align_right">
+              <lightning-formatted-number
+                value={budget.projectedIncome}
+                format-style="currency"
+              ></lightning-formatted-number>
+            </td>
+            <td class="slds-text-align_right">
+              <lightning-formatted-number
+                value={budget.actualExpenses}
+                format-style="currency"
+              ></lightning-formatted-number>
+            </td>
+            <td class={budget.claseDisponible} data-id="available">
+              <lightning-formatted-number
+                value={budget.available}
+                format-style="currency"
+              ></lightning-formatted-number>
+            </td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </template>
+  <template lwc:else>
+    <p data-id="budget-list-empty">
+      Esta propiedad todavía no tiene presupuestos.
+    </p>
+  </template>
+</template>

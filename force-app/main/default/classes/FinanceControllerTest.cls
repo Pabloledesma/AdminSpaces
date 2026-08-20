@@ -89,41 +89,10 @@ private class FinanceControllerTest {
     );
   }
 
-  /**
-   * Usuario sin el Permission Set Property_Manager: no tiene permisos de objeto
-   * sobre Property__c ni Expense__c, así que las SOQL en USER_MODE de los
-   * selectores tienen que fallar. Es la prueba de que la enforcement de FLS
-   * existe de verdad y no es solo una cláusula decorativa en la query.
-   */
-  private static User createUserWithoutAccess() {
-    Profile standardProfile = [
-      SELECT Id
-      FROM Profile
-      WHERE Name = 'Standard User'
-      LIMIT 1
-    ];
-    User restricted = new User(
-      FirstName = 'Sin',
-      LastName = 'Permisos',
-      Email = 'sinpermisos@adminspaces.test.com',
-      Username = 'sinpermisos' +
-        DateTime.now().getTime() +
-        '@adminspaces.test.com',
-      Alias = 'noperm',
-      TimeZoneSidKey = 'America/Sao_Paulo',
-      LocaleSidKey = 'en_US',
-      EmailEncodingKey = 'UTF-8',
-      LanguageLocaleKey = 'en_US',
-      ProfileId = standardProfile.Id
-    );
-    insert restricted;
-    return restricted;
-  }
-
   @isTest
   static void getExpensesByCategory_userWithoutAccess_throwsFriendlyError() {
     Property__c property = [SELECT Id FROM Property__c LIMIT 1];
-    User restricted = createUserWithoutAccess();
+    User restricted = TestDataFactory.createUserWithoutAccess();
 
     String message;
     System.runAs(restricted) {
@@ -146,7 +115,7 @@ private class FinanceControllerTest {
 
   @isTest
   static void getProperties_userWithoutAccess_throwsFriendlyError() {
-    User restricted = createUserWithoutAccess();
+    User restricted = TestDataFactory.createUserWithoutAccess();
 
     String message;
     System.runAs(restricted) {

@@ -1,0 +1,86 @@
+<template>
+  <lightning-card title="Presupuesto de remodelación">
+    <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+      <div class="slds-grid slds-gutters slds-wrap">
+        <div class="slds-col slds-size_1-of-2">
+          <lightning-input
+            type="date"
+            label="Desde"
+            data-id="start-date"
+            value={startDate}
+            onchange={handleStartDateChange}
+          ></lightning-input>
+        </div>
+        <div class="slds-col slds-size_1-of-2">
+          <lightning-input
+            type="date"
+            label="Hasta"
+            data-id="end-date"
+            value={endDate}
+            onchange={handleEndDateChange}
+          ></lightning-input>
+        </div>
+      </div>
+
+      <div class="slds-m-top_small">
+        <lightning-button
+          label="Proyectar ingresos"
+          variant="brand"
+          data-id="project-button"
+          disabled={cannotProject}
+          onclick={handleProject}
+        ></lightning-button>
+        <template lwc:if={projection}>
+          <lightning-button
+            class="slds-m-left_x-small"
+            label="Guardar presupuesto"
+            data-id="save-button"
+            disabled={cannotSave}
+            onclick={handleSave}
+          ></lightning-button>
+        </template>
+      </div>
+
+      <!--
+        Mensajes fuera de cualquier lwc:if que dependa de la proyección: al
+        guardar, la proyección se limpia en el mismo handler, y un mensaje
+        anidado ahí adentro desaparecería justo cuando tiene que aparecer
+        (mismo bug que se corrigió en roomAvailabilityChecker, Historia 5.3).
+      -->
+      <template lwc:if={projectionError}>
+        <p
+          class="slds-text-color_error slds-m-top_small"
+          role="alert"
+          data-id="projection-error"
+        >
+          {projectionError}
+        </p>
+      </template>
+      <template lwc:if={savedBudgetName}>
+        <p
+          class="slds-text-color_success slds-m-top_small"
+          role="alert"
+          data-id="saved-message"
+        >
+          Presupuesto guardado para el período {savedBudgetName}.
+        </p>
+      </template>
+
+      <div class="slds-m-top_medium">
+        <c-budget-projection projection={projection}></c-budget-projection>
+      </div>
+
+      <h3 class="slds-text-title_caps slds-m-top_large slds-m-bottom_x-small">
+        Presupuestos de esta propiedad
+      </h3>
+      <template lwc:if={listError}>
+        <p class="slds-text-color_error" role="alert" data-id="list-error">
+          {listError}
+        </p>
+      </template>
+      <template lwc:else>
+        <c-budget-list budgets={budgets}></c-budget-list>
+      </template>
+    </div>
+  </lightning-card>
+</template>

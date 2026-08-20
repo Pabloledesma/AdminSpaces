@@ -42,4 +42,50 @@ public with sharing class TestDataFactory {
       Is_Demo__c = true
     );
   }
+
+  public static Budget__c buildBudget(
+    Id propertyId,
+    Date startDate,
+    Date endDate,
+    Decimal projectedIncome
+  ) {
+    return new Budget__c(
+      Property__c = propertyId,
+      Start_Date__c = startDate,
+      End_Date__c = endDate,
+      Projected_Income__c = projectedIncome,
+      Is_Demo__c = true
+    );
+  }
+
+  /**
+   * Usuario sin ningún Permission Set del proyecto: sirve para probar, con
+   * System.runAs, que las queries en USER_MODE efectivamente bloquean a quien
+   * no tiene permisos de objeto sobre los custom objects.
+   */
+  public static User createUserWithoutAccess() {
+    Profile standardProfile = [
+      SELECT Id
+      FROM Profile
+      WHERE Name = 'Standard User'
+      LIMIT 1
+    ];
+    User restricted = new User(
+      FirstName = 'Sin',
+      LastName = 'Permisos',
+      Email = 'sinpermisos@adminspaces.test.com',
+      Username = 'sinpermisos' +
+        DateTime.now().getTime() +
+        Math.round(Math.random() * 10000) +
+        '@adminspaces.test.com',
+      Alias = 'noperm',
+      TimeZoneSidKey = 'America/Sao_Paulo',
+      LocaleSidKey = 'en_US',
+      EmailEncodingKey = 'UTF-8',
+      LanguageLocaleKey = 'en_US',
+      ProfileId = standardProfile.Id
+    );
+    insert restricted;
+    return restricted;
+  }
 }
