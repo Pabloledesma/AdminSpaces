@@ -35,6 +35,7 @@ export default class RoomAvailabilityChecker extends LightningElement {
     this.isAvailable = undefined;
     this.reservationCreated = false;
     this.createError = undefined;
+    this.refreshError = undefined;
   }
 
   handleDateRangeChange(event) {
@@ -43,6 +44,7 @@ export default class RoomAvailabilityChecker extends LightningElement {
     this.isAvailable = undefined;
     this.reservationCreated = false;
     this.createError = undefined;
+    this.refreshError = undefined;
   }
 
   handleGuestSelect(event) {
@@ -85,6 +87,7 @@ export default class RoomAvailabilityChecker extends LightningElement {
   async handleCreateReservation() {
     this.createError = undefined;
     this.reservationCreated = false;
+    this.refreshError = undefined;
 
     let creada = false;
     try {

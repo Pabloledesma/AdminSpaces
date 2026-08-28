@@ -60,14 +60,20 @@ public inherited sharing class RevenueProjectionService {
     }
 
     projection.historicalMonthlyAverage = averageMonthlyRevenue(propertyId);
-    Map<String, Decimal> revenueByMonth = revenueByMonth(
-      propertyId,
-      startDate,
-      endDate
-    );
 
+    // La proyección razona en meses calendario completos (ver el javadoc de
+    // Start_Date__c/End_Date__c), así que la query tiene que preguntar por los
+    // mismos meses completos y no por los días exactos del período. Si se
+    // mezclan las dos escalas, un período que arranca el 15 pierde las reservas
+    // del 1 al 14 de ese mismo mes: el mes cae al promedio y encima se muestra
+    // etiquetado como "Promedio" aunque el dato real exista.
     Date cursor = startDate.toStartOfMonth();
     Date lastMonth = endDate.toStartOfMonth();
+    Map<String, Decimal> revenueByMonth = revenueByMonth(
+      propertyId,
+      cursor,
+      lastMonth.addMonths(1).addDays(-1)
+    );
     while (cursor <= lastMonth) {
       String key = monthKey(cursor.year(), cursor.month());
 

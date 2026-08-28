@@ -148,6 +148,59 @@ private class BudgetControllerTest {
   }
 
   @isTest
+  static void getBudgets_repartExpensesEntrePresupuestosDeDistintoPeriodo() {
+    // Con un solo presupuesto la ventana de la query coincide con su período y
+    // el reparto en Apex no decide nada. Con dos períodos distintos la ventana
+    // es más ancha que cada uno, y ahí sí: cada gasto tiene que caer en el
+    // presupuesto que lo contiene y en ninguno más.
+    Date q1Inicio = Date.today().toStartOfMonth();
+    Date q1Fin = q1Inicio.addMonths(3).addDays(-1);
+    Date q2Inicio = q1Fin.addDays(1);
+    Date q2Fin = q2Inicio.addMonths(3).addDays(-1);
+
+    insert new List<Budget__c>{
+      TestDataFactory.buildBudget(propertyId(), q1Inicio, q1Fin, 1000),
+      TestDataFactory.buildBudget(propertyId(), q2Inicio, q2Fin, 2000)
+    };
+
+    insert new List<Expense__c>{
+      new Expense__c(
+        Property__c = propertyId(),
+        Category__c = 'Materials',
+        Amount__c = 100,
+        Expense_Date__c = q1Inicio.addDays(5)
+      ),
+      new Expense__c(
+        Property__c = propertyId(),
+        Category__c = 'Labor',
+        Amount__c = 400,
+        Expense_Date__c = q2Inicio.addDays(5)
+      )
+    };
+
+    Test.startTest();
+    List<BudgetController.BudgetSummary> resumenes = BudgetController.getBudgets(
+      propertyId()
+    );
+    Test.stopTest();
+
+    // Vienen ordenados por Start_Date__c DESC: primero el segundo trimestre
+    System.assertEquals(2, resumenes.size(), 'Dos presupuestos');
+    System.assertEquals(
+      400,
+      resumenes[0].actualExpenses,
+      'El presupuesto más nuevo solo carga con el gasto de su período'
+    );
+    System.assertEquals(
+      100,
+      resumenes[1].actualExpenses,
+      'Y el más viejo con el suyo, aunque los dos gastos entren en la ventana'
+    );
+    System.assertEquals(1600, resumenes[0].available);
+    System.assertEquals(900, resumenes[1].available);
+  }
+
+  @isTest
   static void getBudgets_sinPresupuestos_devuelveListaVacia() {
     Test.startTest();
     List<BudgetController.BudgetSummary> resumenes = BudgetController.getBudgets(

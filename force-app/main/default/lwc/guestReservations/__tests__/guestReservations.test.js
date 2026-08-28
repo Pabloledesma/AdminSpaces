@@ -369,4 +369,93 @@ describe("cancelar la reserva", () => {
       element.shadowRoot.querySelector('[data-id="refresh-error"]').textContent
     ).toContain("Cancelamos tu reserva");
   });
+
+  it("deja el botón Cancelar apagado desde que el servidor confirma", async () => {
+    jest.spyOn(window, "confirm").mockReturnValue(true);
+    let resolverCancelacion;
+    cancelMyReservation.mockReturnValue(
+      new Promise((resolve) => {
+        resolverCancelacion = resolve;
+      })
+    );
+
+    const RESERVATION_ID = MOCK_RESERVATIONS[0].Id;
+    const element = createElement("c-guest-reservations", {
+      is: GuestReservations
+    });
+    document.body.appendChild(element);
+    getMyReservationsAdapter.emit(MOCK_RESERVATIONS);
+    await Promise.resolve();
+
+    const cancelButton = element.shadowRoot.querySelector(
+      `[data-reservation-id="${RESERVATION_ID}"][data-field="cancelButton"]`
+    );
+    cancelButton.dispatchEvent(new CustomEvent("click"));
+    await Promise.resolve();
+
+    resolverCancelacion();
+    // Durante el round-trip del refresco el botón no puede volver a habilitarse:
+    // sería un segundo click sobre una reserva ya cancelada.
+    for (let i = 0; i < 5; i++) {
+      // eslint-disable-next-line no-await-in-loop
+      await Promise.resolve();
+    }
+
+    expect(
+      element.shadowRoot.querySelector(
+        `[data-reservation-id="${RESERVATION_ID}"][data-field="cancelButton"]`
+      ).disabled
+    ).toBe(true);
+  });
+
+  it("no arrastra el aviso de refresco fallido a una operación que después falla", async () => {
+    jest.spyOn(window, "confirm").mockReturnValue(true);
+    cancelMyReservation.mockResolvedValue();
+    refreshApex.mockRejectedValueOnce({ body: undefined });
+
+    const RESERVATION_ID = MOCK_RESERVATIONS[0].Id;
+    const element = createElement("c-guest-reservations", {
+      is: GuestReservations
+    });
+    document.body.appendChild(element);
+    getMyReservationsAdapter.emit(MOCK_RESERVATIONS);
+    await Promise.resolve();
+
+    const tick = async () => {
+      for (let i = 0; i < 6; i++) {
+        // eslint-disable-next-line no-await-in-loop
+        await Promise.resolve();
+      }
+    };
+
+    element.shadowRoot
+      .querySelector(
+        `[data-reservation-id="${RESERVATION_ID}"][data-field="cancelButton"]`
+      )
+      .dispatchEvent(new CustomEvent("click"));
+    await tick();
+    expect(
+      element.shadowRoot.querySelector('[data-id="refresh-error"]')
+    ).not.toBeNull();
+
+    // La operación siguiente falla en el servidor, así que nunca llega a
+    // refrescar: si el aviso viejo no se limpia al empezar, el huésped queda
+    // con dos mensajes que se contradicen.
+    updateMyReservationDates.mockRejectedValue({
+      body: { message: "La reserva ya no se puede modificar." }
+    });
+    element.shadowRoot
+      .querySelector(
+        `[data-reservation-id="${RESERVATION_ID}"][data-field="saveButton"]`
+      )
+      .dispatchEvent(new CustomEvent("click"));
+    await tick();
+
+    expect(
+      element.shadowRoot.querySelector('[data-id="save-error"]').textContent
+    ).toContain("La reserva ya no se puede modificar.");
+    expect(
+      element.shadowRoot.querySelector('[data-id="refresh-error"]')
+    ).toBeNull();
+  });
 });

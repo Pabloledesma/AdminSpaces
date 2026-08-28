@@ -13,6 +13,7 @@ export default class GuestReservations extends LightningElement {
   savingReservationId;
   savedReservationId;
   cancelingReservationId;
+  canceledReservationId;
   cancelErrors = {};
   refreshError;
 
@@ -37,6 +38,7 @@ export default class GuestReservations extends LightningElement {
     return this.reservations.map((reservation) => {
       const CANCELLABLE_STATUSES = ["Pending", "Confirmed"];
       const isCanceling = this.cancelingReservationId === reservation.Id;
+      const justCanceled = this.canceledReservationId === reservation.Id;
       const canCancel = CANCELLABLE_STATUSES.includes(reservation.Status__c);
       const isSaving = this.savingReservationId === reservation.Id;
       const justSaved = this.savedReservationId === reservation.Id;
@@ -47,7 +49,7 @@ export default class GuestReservations extends LightningElement {
         saveDisabled: isSaving || justSaved,
         saveError: this.saveErrors[reservation.Id],
         isCanceling,
-        cancelDisabled: isCanceling || !canCancel,
+        cancelDisabled: isCanceling || justCanceled || !canCancel,
         cancelError: this.cancelErrors[reservation.Id]
       };
     });
@@ -85,6 +87,7 @@ export default class GuestReservations extends LightningElement {
     const changes = this.pendingChanges[reservationId] || {};
 
     this.savingReservationId = reservationId;
+    this.refreshError = undefined;
     delete this.saveErrors[reservationId];
 
     let guardado = false;
@@ -133,6 +136,7 @@ export default class GuestReservations extends LightningElement {
     }
 
     this.cancelingReservationId = reservationId;
+    this.refreshError = undefined;
     delete this.cancelErrors[reservationId];
 
     let cancelada = false;
@@ -151,6 +155,12 @@ export default class GuestReservations extends LightningElement {
     if (!cancelada) {
       return;
     }
+
+    // Igual que savedReservationId en handleSave: el servidor ya confirmó la
+    // cancelación, así que el botón tiene que quedar apagado durante todo el
+    // round-trip del refresco, no volver a habilitarse y permitir un segundo
+    // click sobre una reserva ya cancelada.
+    this.canceledReservationId = reservationId;
 
     await this.refreshList(
       "Cancelamos tu reserva, pero no pudimos actualizar la vista. Recargá la página para verla al día."

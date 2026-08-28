@@ -13,7 +13,26 @@ import getBudgets from "@salesforce/apex/BudgetController.getBudgets";
  * usuario; getBudgets es @wire porque es la foto de los datos que ya existen.
  */
 export default class BudgetPlanner extends LightningElement {
-  @api propertyId;
+  _propertyId;
+
+  /**
+   * Setter y no un campo suelto porque cambiar de propiedad tiene que invalidar
+   * lo que hay en pantalla: si quedara el desglose de la propiedad anterior, el
+   * botón "Guardar" seguiría activo y se guardaría un presupuesto para la
+   * propiedad nueva con un número que el usuario nunca vio para esa propiedad.
+   */
+  @api
+  get propertyId() {
+    return this._propertyId;
+  }
+  set propertyId(value) {
+    if (value === this._propertyId) {
+      return;
+    }
+    this._propertyId = value;
+    this.resetProjection();
+    this.isLoadingBudgets = true;
+  }
 
   startDate;
   endDate;
@@ -24,13 +43,17 @@ export default class BudgetPlanner extends LightningElement {
   savedBudgetName;
   isProjecting = false;
   isSaving = false;
+  isLoadingBudgets = true;
 
   budgetsResult;
 
-  @wire(getBudgets, { propertyId: "$propertyId" })
+  @wire(getBudgets, { propertyId: "$_propertyId" })
   wiredBudgets(result) {
     this.budgetsResult = result;
     const { data, error } = result;
+    if (data || error) {
+      this.isLoadingBudgets = false;
+    }
     if (data) {
       this.budgets = data;
       this.listError = undefined;
@@ -64,7 +87,7 @@ export default class BudgetPlanner extends LightningElement {
 
   get canProject() {
     return Boolean(
-      this.propertyId &&
+      this._propertyId &&
       this.startDate &&
       this.endDate &&
       this.endDate > this.startDate
@@ -72,7 +95,10 @@ export default class BudgetPlanner extends LightningElement {
   }
 
   get cannotProject() {
-    return !this.canProject || this.isProjecting;
+    // También mientras se guarda: si el usuario reproyecta con otras fechas en
+    // medio del guardado, el mensaje de éxito terminaría nombrando un período
+    // distinto del que se guardó.
+    return !this.canProject || this.isProjecting || this.isSaving;
   }
 
   get cannotSave() {
@@ -85,7 +111,7 @@ export default class BudgetPlanner extends LightningElement {
     this.savedBudgetName = undefined;
     try {
       this.projection = await previewProjection({
-        propertyId: this.propertyId,
+        propertyId: this._propertyId,
         startDate: this.startDate,
         endDate: this.endDate
       });
@@ -102,12 +128,17 @@ export default class BudgetPlanner extends LightningElement {
     this.isSaving = true;
     this.projectionError = undefined;
 
+    // El período se captura acá y se usa para el insert y para el mensaje: son
+    // el mismo dato, no puede leerse dos veces del estado.
+    const desde = this.startDate;
+    const hasta = this.endDate;
+
     let guardado = false;
     try {
       await createBudget({
-        propertyId: this.propertyId,
-        startDate: this.startDate,
-        endDate: this.endDate
+        propertyId: this._propertyId,
+        startDate: desde,
+        endDate: hasta
       });
       guardado = true;
     } catch (error) {
@@ -121,7 +152,7 @@ export default class BudgetPlanner extends LightningElement {
       return;
     }
 
-    this.savedBudgetName = `${this.startDate} → ${this.endDate}`;
+    this.savedBudgetName = `${desde} → ${hasta}`;
     this.projection = undefined;
 
     // El refresco va fuera del try del guardado a propósito: a esta altura el

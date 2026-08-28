@@ -298,4 +298,65 @@ describe("c-room-availability-checker", () => {
       element.shadowRoot.querySelector('[data-id="refresh-error"]').textContent
     ).toContain("Creamos la reserva");
   });
+
+  it("limpia el aviso de refresco fallido al cambiar la selección", async () => {
+    checkAvailability.mockResolvedValue(true);
+    createReservation.mockResolvedValue("a01000000000001AAA");
+    refreshApex.mockRejectedValue({ body: undefined });
+
+    const element = createElement("c-room-availability-checker", {
+      is: RoomAvailabilityChecker
+    });
+    element.recordId = "a06000000000001AAA";
+    document.body.appendChild(element);
+
+    element.shadowRoot.querySelector("c-room-picker").dispatchEvent(
+      new CustomEvent("roomselect", {
+        detail: { roomId: "a05000000000001AAA" }
+      })
+    );
+    element.shadowRoot.querySelector("c-date-range-picker").dispatchEvent(
+      new CustomEvent("daterangechange", {
+        detail: { checkIn: "2026-08-01", checkOut: "2026-08-05" }
+      })
+    );
+    await Promise.resolve();
+
+    element.shadowRoot
+      .querySelectorAll("lightning-button")[0]
+      .dispatchEvent(new CustomEvent("click"));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    element.shadowRoot.querySelector("lightning-record-picker").dispatchEvent(
+      new CustomEvent("change", {
+        detail: { recordId: "003000000000001AAA" }
+      })
+    );
+    await Promise.resolve();
+
+    element.shadowRoot
+      .querySelectorAll("lightning-button")[1]
+      .dispatchEvent(new CustomEvent("click"));
+    for (let i = 0; i < 6; i++) {
+      // eslint-disable-next-line no-await-in-loop
+      await Promise.resolve();
+    }
+    expect(
+      element.shadowRoot.querySelector('[data-id="refresh-error"]')
+    ).not.toBeNull();
+
+    // El usuario elige otra habitación: el aviso hablaba de la operación
+    // anterior y ya no aplica a lo que hay en pantalla.
+    element.shadowRoot.querySelector("c-room-picker").dispatchEvent(
+      new CustomEvent("roomselect", {
+        detail: { roomId: "a05000000000002AAA" }
+      })
+    );
+    await Promise.resolve();
+
+    expect(
+      element.shadowRoot.querySelector('[data-id="refresh-error"]')
+    ).toBeNull();
+  });
 });

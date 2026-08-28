@@ -78,6 +78,13 @@
           {listError}
         </p>
       </template>
+      <template lwc:elseif={isLoadingBudgets}>
+        <lightning-spinner
+          alternative-text="Cargando presupuestos"
+          size="small"
+          data-id="budgets-spinner"
+        ></lightning-spinner>
+      </template>
       <template lwc:else>
         <c-budget-list budgets={budgets}></c-budget-list>
       </template>

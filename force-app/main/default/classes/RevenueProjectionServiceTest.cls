@@ -245,4 +245,57 @@ private class RevenueProjectionServiceTest {
       'Y el monto proyectado es el del promedio'
     );
   }
+
+  @isTest
+  static void project_periodoQueNoEmpiezaElDiaUno_igualVeLasReservasDelMes() {
+    // La reserva del mes que viene arranca el día 1; el período pedido empieza
+    // el 20. Como la proyección razona en meses completos, ese mes tiene dato
+    // real y no puede caer al promedio.
+    Date nextMonth = Date.today().toStartOfMonth().addMonths(1);
+
+    Test.startTest();
+    RevenueProjectionService.Projection projection = RevenueProjectionService.project(
+      propertyId(),
+      nextMonth.addDays(19),
+      nextMonth.addDays(25)
+    );
+    Test.stopTest();
+
+    System.assertEquals(1, projection.months.size(), 'Un solo mes tocado');
+    System.assertEquals(
+      true,
+      projection.months[0].fromReservations,
+      'El mes tiene reservas reales aunque el período no las incluya por día'
+    );
+    System.assertEquals(
+      300,
+      projection.months[0].amount,
+      'Y usa el ingreso real del mes completo, no el promedio'
+    );
+  }
+
+  @isTest
+  static void project_periodoDeDosDiasEntreDosMeses_proyectaLosDosMesesCompletos() {
+    Date nextMonth = Date.today().toStartOfMonth().addMonths(1);
+    Date finDeMes = nextMonth.addMonths(1).addDays(-1);
+
+    Test.startTest();
+    RevenueProjectionService.Projection projection = RevenueProjectionService.project(
+      propertyId(),
+      finDeMes,
+      finDeMes.addDays(1)
+    );
+    Test.stopTest();
+
+    Decimal promedio = ((Decimal) 200)
+      .divide(12, 2, System.RoundingMode.HALF_UP);
+    System.assertEquals(2, projection.months.size(), 'Toca dos meses');
+    System.assertEquals(
+      true,
+      projection.months[0].fromReservations,
+      'El primero tiene la reserva del mes, aunque caiga fuera de los dos días'
+    );
+    System.assertEquals(300, projection.months[0].amount);
+    System.assertEquals(promedio, projection.months[1].amount);
+  }
 }

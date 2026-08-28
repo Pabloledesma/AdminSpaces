@@ -245,6 +245,75 @@ describe("c-budget-planner", () => {
     expect(texto).not.toContain("de esta propiedad");
   });
 
+  it("descarta la proyección al cambiar de propiedad", async () => {
+    previewProjection.mockResolvedValue(PROYECCION);
+    const element = crear();
+
+    elegirPeriodo(element, "2026-09-01", "2026-12-01");
+    await Promise.resolve();
+    boton(element, "project-button").dispatchEvent(new CustomEvent("click"));
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(boton(element, "save-button")).not.toBeNull();
+
+    // El padre cambia de propiedad en el combobox
+    element.propertyId = "a06000000000002AAA";
+    await Promise.resolve();
+
+    // Si el desglose viejo quedara, se guardaría un presupuesto de la propiedad
+    // nueva con el número de la anterior.
+    expect(boton(element, "save-button")).toBeNull();
+    expect(
+      element.shadowRoot.querySelector("c-budget-projection").projection
+    ).toBeUndefined();
+  });
+
+  it("muestra el spinner mientras carga la lista, no el estado vacío", async () => {
+    const element = crear();
+    await Promise.resolve();
+
+    expect(boton(element, "budgets-spinner")).not.toBeNull();
+    expect(element.shadowRoot.querySelector("c-budget-list")).toBeNull();
+
+    getBudgets.emit([]);
+    await Promise.resolve();
+
+    expect(boton(element, "budgets-spinner")).toBeNull();
+    expect(element.shadowRoot.querySelector("c-budget-list")).not.toBeNull();
+  });
+
+  it("no deja reproyectar mientras se está guardando", async () => {
+    previewProjection.mockResolvedValue(PROYECCION);
+    let resolverGuardado;
+    createBudget.mockReturnValue(
+      new Promise((resolve) => {
+        resolverGuardado = resolve;
+      })
+    );
+    const element = crear();
+
+    elegirPeriodo(element, "2026-09-01", "2026-12-01");
+    await Promise.resolve();
+    boton(element, "project-button").dispatchEvent(new CustomEvent("click"));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    boton(element, "save-button").dispatchEvent(new CustomEvent("click"));
+    await Promise.resolve();
+
+    // Reproyectar con otras fechas acá dejaría el mensaje de éxito nombrando
+    // un período distinto del que se guardó.
+    expect(boton(element, "project-button").disabled).toBe(true);
+
+    resolverGuardado("a0X000000000001AAA");
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(boton(element, "saved-message").textContent).toContain(
+      "2026-09-01 → 2026-12-01"
+    );
+  });
+
   it("le pasa a la lista los presupuestos que devuelve el wire", async () => {
     const element = crear();
 

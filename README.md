@@ -23,9 +23,9 @@ Todos los objetos tienen un campo `Is_Demo__c` (default `true`), pensado para la
 
 ## Seguridad y permisos
 
-- **OWD**: `Private` en los objetos raíz (`Property__c`, `Maintenance_Task__c`); `ControlledByParent` en los que cuelgan de una relación Master-Detail (`Room__c`, `Reservation__c`, `Expense__c`).
+- **OWD**: `Private` en los objetos raíz (`Property__c`, `Maintenance_Task__c`); `ControlledByParent` en los que cuelgan de una relación Master-Detail (`Room__c`, `Reservation__c`, `Expense__c`, `Budget__c`).
 - **Permission Sets**:
-  - `Property_Manager` — acceso operativo completo a los 5 objetos, para administradores de la plataforma.
+  - `Property_Manager` — acceso operativo completo a los 6 objetos custom (más el Platform Event `Maintenance_Task_Moved__e`), para administradores de la plataforma.
   - `Maintenance_Staff` — acceso exclusivo a `Maintenance_Task__c`, aplicando el principio de menor privilegio para el personal de limpieza/mantenimiento.
   - `Huesped` — `allowEdit` sobre `Reservation__c` para el huésped autenticado (Historia 4.3). Deliberadamente un Permission Set y no un cambio al profile: más chico y portable entre orgs. La asignación a cada huésped autorregistrado es manual por ahora (ver roadmap).
 - **Guest User anónimo** (Hito 3): Sharing Rule por criterio (`Is_Demo__c = true`) sobre `Property__c` para el sitio Experience Cloud.
@@ -59,7 +59,7 @@ ReservationTriggerHandler   (orquesta antes de insert/update, sin lógica de neg
 
 **`ReservationFlow`** (Record-Triggered Flow con Scheduled Path): crea una `Maintenance_Task__c` de limpieza un día antes de cada checkout. Se resolvió con Flow en vez de Apex porque es una automatización puramente basada en fecha, sin necesidad del batch/query propio de un Schedulable — la lógica de solapamiento y precio (Historias 2.1/2.2) se mantuvo en Apex a propósito, ya que un Flow _before-save_ no puede comparar registros entre sí dentro del mismo batch de inserción.
 
-**`RevenueProjectionService`** (Historia 5.6): la proyección de ingresos, separada del controller por el mismo criterio SOLID que `ReservationOverlapValidator` — no hace DML, no conoce `Budget__c`, solo calcula. Dos decisiones que vale la pena mirar: el ingreso del período se trae con **una sola query agregada** (`GROUP BY CALENDAR_YEAR/CALENDAR_MONTH`) en vez de una por mes, porque un presupuesto a cinco años serían 60 SOQL contra el límite de 100; y un mes cuyo `SUM(Total_Amount__c)` vuelve `null` (hay reservas, pero ninguna con importe) se trata como **ausencia de dato** y cae al promedio, no como un ingreso de cero — un caso que apareció recién al correr el cálculo contra los datos reales del org, no en los tests.
+**`RevenueProjectionService`** (Historia 5.6): la proyección de ingresos, separada del controller por el mismo criterio SOLID que `ReservationOverlapValidator` — no hace DML, no conoce `Budget__c`, solo calcula. Dos decisiones que vale la pena mirar: el ingreso del período se trae con **una sola query agregada** (`GROUP BY CALENDAR_YEAR/CALENDAR_MONTH`) en vez de una por mes, porque la versión ingenua cuesta una SOQL por mes proyectado: a cinco años consume 61 de las 100 de la transacción, y a partir de los nueve ya no entra; y un mes cuyo `SUM(Total_Amount__c)` vuelve `null` (hay reservas, pero ninguna con importe) se trata como **ausencia de dato** y cae al promedio, no como un ingreso de cero — un caso que apareció recién al correr el cálculo contra los datos reales del org, no en los tests.
 
 ## Componentes LWC
 
