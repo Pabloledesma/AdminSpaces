@@ -70,14 +70,23 @@ _(La historia de seguridad para el Guest User no autenticado se movió al Hito 3
 
 ## Hito 6 — Agentforce
 
-- [ ] **Historia 6.1:** Como huésped potencial, quiero poder preguntarle a un agente si una habitación está disponible en ciertas fechas, para no tener que navegar la interfaz manualmente.
-- [ ] **Historia 6.2:** Como encargado de mantenimiento, quiero poder reportarle un problema a un agente en lenguaje natural y que este cree automáticamente el `Maintenance_Task__c` correspondiente, para agilizar el reporte de incidencias.
+- [ ] **Historia 6.1:** Como property manager, quiero poder preguntarle a un agente de Slack si una habitación está disponible en ciertas fechas, para no tener que abrir el sitio y navegar la interfaz manualmente. _(reformulada: Slack en Agentforce es un canal para agentes de empleados, no para clientes externos — ver nota de seguimiento; la acción Apex ya existe y está testeada, falta crear el agente y conectarlo)_
+- [ ] **Historia 6.2:** Como encargado de mantenimiento, quiero poder reportarle un problema a un agente en lenguaje natural y que este cree automáticamente el `Maintenance_Task__c` correspondiente, para agilizar el reporte de incidencias. _(la acción Apex ya existe y está testeada, falta crear el agente y conectarlo a Slack)_
 
 ---
 
 ## Notas de seguimiento
 
 _(usa este espacio para anotar decisiones importantes que tomes durante la implementación, útil para cuando armes el case study del portafolio)_
+
+- **Historias 6.1/6.2 — acciones Apex para Agentforce (2026-08-29):**
+  1. **Slack en Agentforce es un canal de empleados, no de clientes.** El artículo oficial de Salesforce es "Connect an Agent to Slack" (`agent_deploy_emp_slack` — _emp_ de _employee_), y el acceso se otorga asignando Permission Sets a usuarios internos. Por eso la Historia 6.1 se reformuló: pasa de "huésped potencial" a "property manager", y el agente completo va a ser interno (empleados), no cara al cliente.
+  2. **`Property__c.Name` y `Room__c.Name` son AutoNumber** (`PR-{000}`, `R-{0000}`), verificado contra el describe del org. Por eso `PropertyLookupAgentAction` busca por `Address__c`/`City__c` en vez de por nombre — nadie va a decirle "PR-003" a un agente de Slack.
+  3. **`Maintenance_Task__c.Name` es texto libre, no AutoNumber**, y Salesforce lo acepta vacío (probado con Anonymous Apex: un insert sin `Name` funciona igual). Se decidió generarlo a partir de la descripción del problema, truncado a los 80 caracteres del campo, para que la tarea no quede sin identificador en ningún list view estándar.
+  4. **De dos `Set` sueltos a un solo `Map` por `Name`.** La primera versión de `MaintenanceTaskAgentAction` resolvía habitaciones con `WHERE Name IN :roomNames AND Property__c IN :propertyIds` — que es un cross-product, no pares exactos. Se simplificó a `WHERE Name IN :roomNames` sin más, porque `Room__c.Name` resultó ser un AutoNumber **global al objeto**: verificado con datos reales del org (R-0001 a R-0013 en secuencia continua, sin reiniciarse entre propiedades distintas), un código de habitación identifica como máximo un registro en todo el org. La verificación de "pertenece a esa propiedad" se hace después, en Apex, comparando `room.Property__c` contra el `propertyId` del request — chequeo que de todos modos hacía falta hacer.
+  5. **`RoomAvailabilityAgentAction` es la única de las tres que ejecuta una SOQL por request**, vía `RoomAvailabilityController.checkAvailability`. Se evaluó evitarlo reimplementando la regla de solapamiento acá, y se descartó: hubiera duplicado lógica de negocio ya probada en `ReservationOverlapValidator`, que es justo lo que estas acciones tienen que evitar.
+  6. **Labels de "habitación no encontrada" separados a propósito.** `MaintenanceTaskAgentAction` y `RoomAvailabilityAgentAction` necesitan el mismo mensaje, pero se evitó compartir un único Custom Label: el de mantenimiento ya estaba desplegado y testeado, y renombrarlo hubiera significado borrar uno y crear otro en el org (el Metadata API no soporta rename de labels). Se creó `Agent_Availability_Room_Not_Found` aparte, con el mismo texto.
+  7. **Bug real en un test propio, no en el código:** comparar `System.Label.X` directo (sin `String.format`) contra un mensaje ya formateado. El label crudo conserva los placeholders `{0}`/`{1}` literales — la comparación fallaba mostrando `"{0}" en esa propiedad...` esperado contra el mensaje real ya sustituido. Corregido formateando también el lado esperado del assert.
 
 - **Historia 5.6 — presupuesto con proyección híbrida (2026-08-19):**
   1. **`Projected_Income__c` es un campo común, no una fórmula ni un roll-up.** La proyección se congela al crear el presupuesto: si se recalculara sola cada vez que entra una reserva, el presupuesto dejaría de ser "la decisión que tomé con la información de aquel día" y no serviría para comparar plan contra realidad. Hay un test que lo fija (`createBudget_noSeRecalculaCuandoEntranReservasNuevas`): inserta una reserva nueva después de crear el presupuesto y verifica que el número guardado no se movió.

@@ -61,6 +61,8 @@ ReservationTriggerHandler   (orquesta antes de insert/update, sin lógica de neg
 
 **`RevenueProjectionService`** (Historia 5.6): la proyección de ingresos, separada del controller por el mismo criterio SOLID que `ReservationOverlapValidator` — no hace DML, no conoce `Budget__c`, solo calcula. Dos decisiones que vale la pena mirar: el ingreso del período se trae con **una sola query agregada** (`GROUP BY CALENDAR_YEAR/CALENDAR_MONTH`) en vez de una por mes, porque la versión ingenua cuesta una SOQL por mes proyectado: a cinco años consume 61 de las 100 de la transacción, y a partir de los nueve ya no entra; y un mes cuyo `SUM(Total_Amount__c)` vuelve `null` (hay reservas, pero ninguna con importe) se trata como **ausencia de dato** y cae al promedio, no como un ingreso de cero — un caso que apareció recién al correr el cálculo contra los datos reales del org, no en los tests.
 
+**Acciones para Agentforce** (Historias 6.1/6.2, en curso): `PropertyLookupAgentAction`, `MaintenanceTaskAgentAction` y `RoomAvailabilityAgentAction` son las tres `GenAiFunction` invocables que va a usar el agente interno de Slack del Hito 6 — envuelven lógica ya existente y probada (`ReservationOverlapValidator`, `RoomAvailabilityController`, el patrón picklist-driven de `MaintenanceTaskStatusService`) en vez de duplicarla. Como `Property__c.Name` y `Room__c.Name` son AutoNumber, la búsqueda de propiedad resuelve por dirección/ciudad y la de habitación por su código (`R-0002`), que es lo que el equipo dice a diario. Las tres son bulk-safe — resuelven todo el batch con una sola query y un único DML — salvo `RoomAvailabilityAgentAction`, que ejecuta una consulta por request a propósito, para reusar `checkAvailability` en vez de reimplementar la regla de solapamiento (ver roadmap). Falta crear el agente propiamente dicho y conectarlo a Slack; el spec borrador vive en `specs/agentSpec.yaml`.
+
 ## Componentes LWC
 
 **`guestReservations`** (Historias 4.2, 4.3 y 4.4): componente del portal autenticado que muestra al huésped el detalle de su propia reserva (habitación, fechas, monto, estado) vía `@wire` a `getMyReservations`, le permite modificar las fechas de check-in/check-out (`updateMyReservationDates`) y cancelarla (`cancelMyReservation`, con confirmación previa) — ambas llamadas imperativas, no vía Lightning Data Service, ya que `Reservation__c` no tiene ningún camino de sharing declarativo viable para esto (ver roadmap). Maneja los estados de lectura (datos/vacío/error) y de cada mutación (deshabilitado mientras guarda/cancela, mensaje de éxito, mensaje de error, reactivación al editar de nuevo), todo cubierto por su test Jest (`__tests__/guestReservations.test.js`), sin fase de testing separada.
@@ -94,7 +96,7 @@ Estado actual por hito (detalle completo con historias en [`docs/property-manage
 - ✅ **Hito 3** — Sitio Experience Cloud (publicado; Guest User anónimo viendo demo data)
 - ✅ **Hito 4** — Portal de autoservicio del huésped (login/registro, ver/editar/cancelar la propia reserva)
 - ✅ **Hito 5** — Componentes LWC (dashboard de propiedad, chequeo de disponibilidad, creación de reserva, kanban de mantenimiento con Platform Events, gráfico de gastos por categoría y presupuesto de remodelación con proyección de ingresos)
-- ⬜ **Hito 6** — Agentforce
+- 🟡 **Hito 6** — Agentforce (acciones Apex de las Historias 6.1/6.2 listas y testeadas; falta crear el agente en Agentforce Studio y conectarlo a Slack)
 
 ## Desarrollo asistido por IA
 

@@ -3,6 +3,14 @@ public with sharing class TestDataFactory {
     return new Property__c(Is_Demo__c = true);
   }
 
+  public static Property__c createProperty(String address, String city) {
+    return new Property__c(
+      Address__c = address,
+      City__c = city,
+      Is_Demo__c = true
+    );
+  }
+
   public static Room__c createRoom(Id propertyId) {
     return new Room__c(
       Property__c = propertyId,

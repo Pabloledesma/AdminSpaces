@@ -24,4 +24,22 @@ public inherited sharing class PropertySelector {
   public static List<Property__c> getPropertyByRoomCount(Integer roomCount) {
     return [SELECT Id FROM Property__c WHERE Room_Count__c = :roomCount];
   }
+
+  /**
+   * Todas las propiedades con los campos que necesita la búsqueda del agente
+   * (Historia 6). Sin WHERE, igual que `getAllProperties()`: a esta escala
+   * (decenas de propiedades) es más simple traer todo y filtrar en Apex por
+   * request que armar SOQL dinámico para un término de búsqueda libre —
+   * mismo criterio que ya usa `getAllProperties()` para el combobox de
+   * Finanzas. Campos y orden distintos porque el consumidor es distinto:
+   * acá importa Address__c/City__c/Room_Count__c, no Name.
+   */
+  public static List<Property__c> getForSearch() {
+    return [
+      SELECT Id, Address__c, City__c, Room_Count__c
+      FROM Property__c
+      WITH USER_MODE
+      ORDER BY Address__c
+    ];
+  }
 }

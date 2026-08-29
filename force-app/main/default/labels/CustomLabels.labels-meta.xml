@@ -19,6 +19,66 @@
         <value>No se encontró ninguna propiedad!</value>
     </labels>
     <labels>
+        <fullName>Agent_Property_Not_Found</fullName>
+        <categories>AdminSpaces</categories>
+        <language>es</language>
+        <protected>false</protected>
+        <shortDescription
+    >Búsqueda de propiedad sin coincidencias (agente).</shortDescription>
+        <value
+    >No encontré ninguna propiedad con esa dirección o ciudad. ¿Podés confirmar el dato?</value>
+    </labels>
+    <labels>
+        <fullName>Agent_Maintenance_Room_Not_In_Property</fullName>
+        <categories>AdminSpaces</categories>
+        <language>es</language>
+        <protected>false</protected>
+        <shortDescription
+    >Habitación no encontrada en la propiedad indicada (agente).</shortDescription>
+        <value
+    >No encontré la habitación {0} en esa propiedad. ¿Podés confirmar el código?</value>
+    </labels>
+    <labels>
+        <fullName>Agent_Maintenance_Invalid_Priority</fullName>
+        <categories>AdminSpaces</categories>
+        <language>es</language>
+        <protected>false</protected>
+        <shortDescription
+    >Prioridad inválida al crear tarea desde el agente.</shortDescription>
+        <value>"{0}" no es una prioridad válida. Las opciones son: {1}.</value>
+    </labels>
+    <labels>
+        <fullName>Agent_Availability_Room_Not_Found</fullName>
+        <categories>AdminSpaces</categories>
+        <language>es</language>
+        <protected>false</protected>
+        <shortDescription
+    >Habitación no encontrada en la propiedad indicada (agente).</shortDescription>
+        <value
+    >No encontré la habitación {0} en esa propiedad. ¿Podés confirmar el código?</value>
+    </labels>
+    <labels>
+        <fullName>Agent_Availability_Invalid_Dates</fullName>
+        <categories>AdminSpaces</categories>
+        <language>es</language>
+        <protected>false</protected>
+        <shortDescription
+    >Rango de fechas inválido al consultar disponibilidad (agente).</shortDescription>
+        <value
+    >Esas fechas no son válidas: el check-out tiene que ser posterior al check-in.</value>
+    </labels>
+    <labels>
+        <fullName>Agent_Availability_Not_Available</fullName>
+        <categories>AdminSpaces</categories>
+        <language>es</language>
+        <protected>false</protected>
+        <shortDescription
+    >Habitación no disponible en el rango de fechas consultado (agente).</shortDescription>
+        <value>Esa habitación no está disponible en esas fechas.</value>
+    </labels>
+
+
+    <labels>
         <fullName>Reservation_Not_Found</fullName>
         <categories>AdminSpaces</categories>
         <language>es</language>

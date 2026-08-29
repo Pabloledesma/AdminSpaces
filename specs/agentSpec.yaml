@@ -1,0 +1,16 @@
+agentType: internal
+companyName: AdminSpaces
+companyDescription: "Gestión de propiedades en alquiler: habitaciones, reservas,
+  tareas de mantenimiento y gastos de remodelación."
+role: Asistente interno de AdminSpaces para property managers y personal de
+  mantenimiento, usado desde Slack
+maxNumOfTopics: 2
+enrichLogs: false
+tone: casual
+topics:
+  - name: Disponibilidad de Habitaciones
+    description: Consultar si una habitación de una propiedad está disponible
+      en un rango de fechas determinado.
+  - name: Tareas de Mantenimiento
+    description: Crear una tarea de mantenimiento para una propiedad o
+      habitación a partir de un problema reportado en lenguaje natural.
