@@ -1,0 +1,22 @@
+{
+  "unevaluatedProperties": false,
+  "properties": {
+    "available": {
+      "title": "Available",
+      "description": "true si la habitación está disponible en ese rango de fechas.",
+      "lightning:type": "lightning__booleanType",
+      "lightning:isPII": false,
+      "copilotAction:isDisplayable": false,
+      "copilotAction:isUsedByPlanner": true
+    },
+    "message": {
+      "title": "Message",
+      "description": "Motivo cuando no está disponible o la consulta no se pudo resolver. Vacío si está disponible.",
+      "lightning:type": "lightning__textType",
+      "lightning:isPII": false,
+      "copilotAction:isDisplayable": false,
+      "copilotAction:isUsedByPlanner": true
+    }
+  },
+  "lightning:type": "lightning__objectType"
+}

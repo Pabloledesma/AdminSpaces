@@ -1,0 +1,35 @@
+{
+  "required": ["propertyId", "description"],
+  "unevaluatedProperties": false,
+  "properties": {
+    "description": {
+      "title": "Description",
+      "description": "Descripción del problema reportado, en las palabras del usuario.",
+      "lightning:type": "lightning__textType",
+      "lightning:isPII": false,
+      "copilotAction:isUserInput": false
+    },
+    "priority": {
+      "title": "Priority",
+      "description": "Prioridad de la tarea: Low, Medium, High o Urgent. Si no se especifica, se usa Medium.",
+      "lightning:type": "lightning__textType",
+      "lightning:isPII": false,
+      "copilotAction:isUserInput": false
+    },
+    "propertyId": {
+      "title": "Property Id",
+      "description": "Id de la propiedad, obtenido con check_property.",
+      "lightning:type": "lightning__recordIdType",
+      "lightning:isPII": false,
+      "copilotAction:isUserInput": false
+    },
+    "roomName": {
+      "title": "Room Name",
+      "description": "Código de la habitación afectada, por ejemplo R-0002. Vacío si el problema es de la propiedad en general.",
+      "lightning:type": "lightning__textType",
+      "lightning:isPII": false,
+      "copilotAction:isUserInput": false
+    }
+  },
+  "lightning:type": "lightning__objectType"
+}

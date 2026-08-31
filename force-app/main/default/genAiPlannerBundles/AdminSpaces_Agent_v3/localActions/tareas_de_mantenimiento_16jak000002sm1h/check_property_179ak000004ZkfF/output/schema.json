@@ -1,0 +1,26 @@
+{
+  "unevaluatedProperties": false,
+  "properties": {
+    "candidates": {
+      "title": "Candidates",
+      "description": "Propiedades que coinciden con la búsqueda, cada una con propertyId, address, city y roomCount. Si hay más de una, hay que preguntarle al usuario cuál es.",
+      "maxItems": 2000,
+      "items": {
+        "lightning:type": "@apexClassType/c__PropertyLookupAgentAction$PropertyCandidate"
+      },
+      "lightning:type": "lightning__listType",
+      "lightning:isPII": false,
+      "copilotAction:isDisplayable": false,
+      "copilotAction:isUsedByPlanner": true
+    },
+    "message": {
+      "title": "Message",
+      "description": "Mensaje para el usuario cuando no se encontró ninguna coincidencia.",
+      "lightning:type": "lightning__textType",
+      "lightning:isPII": false,
+      "copilotAction:isDisplayable": false,
+      "copilotAction:isUsedByPlanner": true
+    }
+  },
+  "lightning:type": "lightning__objectType"
+}

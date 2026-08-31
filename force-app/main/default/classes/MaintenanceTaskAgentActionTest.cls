@@ -25,13 +25,20 @@ private class MaintenanceTaskAgentActionTest {
     System.assertNotEquals(null, responses[0].taskName);
 
     Maintenance_Task__c inserted = [
-      SELECT Room__c, Priority__c, Status__c
+      SELECT Id, Room__c, Priority__c, Status__c
       FROM Maintenance_Task__c
       WHERE Property__c = :property.Id
     ];
     System.assertEquals(room.Id, inserted.Room__c);
     System.assertEquals('High', inserted.Priority__c);
     System.assertEquals('Pending', inserted.Status__c);
+    System.assert(
+      responses[0]
+        .taskUrl.endsWith(
+          '/lightning/r/Maintenance_Task__c/' + inserted.Id + '/view'
+        ),
+      'El link tiene que apuntar al registro recién creado, no a uno genérico'
+    );
   }
 
   @isTest

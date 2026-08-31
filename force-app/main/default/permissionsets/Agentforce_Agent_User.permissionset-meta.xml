@@ -5,10 +5,15 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>RoomAvailabilityAgentAction</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>MaintenanceTaskAgentAction</apexClass>
         <enabled>true</enabled>
     </classAccesses>
-    <description>Encargados de la Limpieza y mantenimiento</description>
+    <description
+  >Identidad de ejecución del agente de Slack (Hito 6): mínimo acceso para invocar las tres GenAiFunction, sin depender de a quién le esté respondiendo en la conversación.</description>
     <fieldPermissions>
         <editable>true</editable>
         <field>Maintenance_Task__c.Description__c</field>
@@ -55,8 +60,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
-    <label>Maintenance Staff</label>
-    <license>Salesforce</license>
+    <label>Agentforce Agent User</label>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>false</allowDelete>

@@ -1,0 +1,35 @@
+{
+  "required": ["propertyId", "roomName", "checkIn", "checkOut"],
+  "unevaluatedProperties": false,
+  "properties": {
+    "checkIn": {
+      "title": "Check In",
+      "description": "Fecha de entrada, en formato ISO (YYYY-MM-DD).",
+      "lightning:type": "lightning__dateType",
+      "lightning:isPII": false,
+      "copilotAction:isUserInput": false
+    },
+    "checkOut": {
+      "title": "Check Out",
+      "description": "Fecha de salida, en formato ISO (YYYY-MM-DD). Tiene que ser posterior al check-in.",
+      "lightning:type": "lightning__dateType",
+      "lightning:isPII": false,
+      "copilotAction:isUserInput": false
+    },
+    "propertyId": {
+      "title": "Property Id",
+      "description": "Id de la propiedad, obtenido con check_property.",
+      "lightning:type": "lightning__recordIdType",
+      "lightning:isPII": false,
+      "copilotAction:isUserInput": false
+    },
+    "roomName": {
+      "title": "Room Name",
+      "description": "Código de la habitación a consultar, por ejemplo R-0002.",
+      "lightning:type": "lightning__textType",
+      "lightning:isPII": false,
+      "copilotAction:isUserInput": false
+    }
+  },
+  "lightning:type": "lightning__objectType"
+}

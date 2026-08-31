@@ -11,3 +11,7 @@
 coverage/
 # Skills vendorizadas (sf-skills): son archivos de terceros, no código del proyecto
 .agents/
+
+# El grafo de un GenAiPlannerBundle es un blob Base64 dentro de un .json, no
+# JSON real — Salesforce lo serializa así, y prettier no puede parsearlo.
+**/genAiPlannerBundles/**/agentGraph/*.json

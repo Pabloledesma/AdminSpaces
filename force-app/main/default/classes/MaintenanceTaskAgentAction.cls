@@ -49,9 +49,14 @@ public with sharing class MaintenanceTaskAgentAction {
     public Boolean created = false;
 
     @InvocableVariable(
-      description='Código de la tarea creada, para que el usuario pueda hacerle seguimiento. Vacío si no se creó.'
+      description='Título de la tarea creada (derivado de la descripción). Vacío si no se creó.'
     )
     public String taskName;
+
+    @InvocableVariable(
+      description='Link directo a la tarea en Salesforce, para que el usuario pueda abrirla y hacerle seguimiento. Vacío si no se creó.'
+    )
+    public String taskUrl;
 
     @InvocableVariable(
       description='Motivo por el que no se pudo crear la tarea. Vacío si se creó con éxito.'
@@ -148,6 +153,11 @@ public with sharing class MaintenanceTaskAgentAction {
       if (saveResults[taskIdx].isSuccess()) {
         resp.created = true;
         resp.taskName = tasksToInsert[taskIdx].Name;
+        resp.taskUrl =
+          URL.getOrgDomainUrl().toExternalForm() +
+          '/lightning/r/Maintenance_Task__c/' +
+          tasksToInsert[taskIdx].Id +
+          '/view';
       } else {
         resp.message = saveResults[taskIdx].getErrors()[0].getMessage();
       }

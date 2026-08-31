@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenAiPlannerBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Asistente interno de AdminSpaces para property managers y personal de mantenimiento, usado desde Slack</description>
+    <localTopicLinks>
+        <genAiPluginName>agent_router_16jak000002sm1h</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>ambiguous_question_16jak000002sm1h</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>disponibilidad_de_habitaciones_16jak000002sm1h</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>escalation_16jak000002sm1h</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>off_topic_16jak000002sm1h</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>tareas_de_mantenimiento_16jak000002sm1h</genAiPluginName>
+    </localTopicLinks>
+    <localTopics>
+        <fullName>agent_router_16jak000002sm1h</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Da la bienvenida al usuario y determina el subagente adecuado según lo que pida.</description>
+        <developerName>agent_router_16jak000002sm1h</developerName>
+        <genAiPluginInstructions>
+            <description>Sos el asistente interno de AdminSpaces para property managers y personal de mantenimiento, usado desde Slack. Ayudás a consultar disponibilidad de habitaciones y a reportar problemas de mantenimiento. Respondé siempre en español, de forma directa y sin formalismos, como corresponde a una herramienta interna de uso diario.</description>
+            <developerName>instruction0_179ak000004ZkfE</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179ak000004ZkfE</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localDeveloperName>agent_router</localDeveloperName>
+        <masterLabel>Router del Agente</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>off_topic_16jak000002sm1h</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Redirige la conversación a los temas relevantes cuando el pedido del usuario está fuera de tema.</description>
+        <developerName>off_topic_16jak000002sm1h</developerName>
+        <genAiPluginInstructions>
+            <description>Sos el asistente interno de AdminSpaces para property managers y personal de mantenimiento, usado desde Slack. Ayudás a consultar disponibilidad de habitaciones y a reportar problemas de mantenimiento. Respondé siempre en español, de forma directa y sin formalismos, como corresponde a una herramienta interna de uso diario.</description>
+            <developerName>instruction0_179ak000004ZkfD</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179ak000004ZkfD</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localDeveloperName>off_topic</localDeveloperName>
+        <masterLabel>Fuera de Tema</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>disponibilidad_de_habitaciones_16jak000002sm1h</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Consultar si una habitación de una propiedad está disponible en un rango de fechas determinado.</description>
+        <developerName>disponibilidad_de_habitaciones_16jak000002sm1h</developerName>
+        <genAiPluginInstructions>
+            <description>Sos el asistente interno de AdminSpaces para property managers y personal de mantenimiento, usado desde Slack. Ayudás a consultar disponibilidad de habitaciones y a reportar problemas de mantenimiento. Respondé siempre en español, de forma directa y sin formalismos, como corresponde a una herramienta interna de uso diario.</description>
+            <developerName>instruction0_179ak000004ZkfG</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179ak000004ZkfG</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localActionLinks>
+            <functionName>check_room_availability_179ak000004ZkfG</functionName>
+        </localActionLinks>
+        <localActionLinks>
+            <functionName>check_property_179ak000004ZkfG</functionName>
+        </localActionLinks>
+        <localActions>
+            <fullName>check_room_availability_179ak000004ZkfG</fullName>
+            <description>Indica si una habitación de una propiedad está disponible en un rango de fechas, dado el Id de la propiedad, el código de la habitación y las fechas de check-in y check-out.</description>
+            <developerName>check_room_availability_179ak000004ZkfG</developerName>
+            <invocationTarget>RoomAvailabilityAgentAction</invocationTarget>
+            <invocationTargetType>apex</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>false</isIncludeInProgressIndicator>
+            <localDeveloperName>check_room_availability</localDeveloperName>
+            <masterLabel>Check Room Availability</masterLabel>
+        </localActions>
+        <localActions>
+            <fullName>check_property_179ak000004ZkfG</fullName>
+            <description>Busca propiedades por dirección o ciudad para obtener el Id que necesitan las demás acciones. Puede devolver más de una candidata.</description>
+            <developerName>check_property_179ak000004ZkfG</developerName>
+            <invocationTarget>PropertyLookupAgentAction</invocationTarget>
+            <invocationTargetType>apex</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>false</isIncludeInProgressIndicator>
+            <localDeveloperName>check_property</localDeveloperName>
+            <masterLabel>Check Property</masterLabel>
+        </localActions>
+        <localDeveloperName>disponibilidad_de_habitaciones</localDeveloperName>
+        <masterLabel>Disponibilidad de Habitaciones</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>tareas_de_mantenimiento_16jak000002sm1h</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Crear una tarea de mantenimiento para una propiedad o habitación a partir de un problema reportado en lenguaje natural.</description>
+        <developerName>tareas_de_mantenimiento_16jak000002sm1h</developerName>
+        <genAiPluginInstructions>
+            <description>Sos el asistente interno de AdminSpaces para property managers y personal de mantenimiento, usado desde Slack. Ayudás a consultar disponibilidad de habitaciones y a reportar problemas de mantenimiento. Respondé siempre en español, de forma directa y sin formalismos, como corresponde a una herramienta interna de uso diario.</description>
+            <developerName>instruction0_179ak000004ZkfF</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179ak000004ZkfF</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localActionLinks>
+            <functionName>create_maintenance_task_179ak000004ZkfF</functionName>
+        </localActionLinks>
+        <localActionLinks>
+            <functionName>check_property_179ak000004ZkfF</functionName>
+        </localActionLinks>
+        <localActions>
+            <fullName>create_maintenance_task_179ak000004ZkfF</fullName>
+            <description>Crea una tarea de mantenimiento para una propiedad, opcionalmente asociada a una habitación puntual, con una descripción y una prioridad opcional (Low, Medium, High o Urgent; por defecto Medium).</description>
+            <developerName>create_maintenance_task_179ak000004ZkfF</developerName>
+            <invocationTarget>MaintenanceTaskAgentAction</invocationTarget>
+            <invocationTargetType>apex</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>false</isIncludeInProgressIndicator>
+            <localDeveloperName>create_maintenance_task</localDeveloperName>
+            <masterLabel>Create Maintenance Task</masterLabel>
+        </localActions>
+        <localActions>
+            <fullName>check_property_179ak000004ZkfF</fullName>
+            <description>Busca propiedades por dirección o ciudad para obtener el Id que necesitan las demás acciones. Puede devolver más de una candidata.</description>
+            <developerName>check_property_179ak000004ZkfF</developerName>
+            <invocationTarget>PropertyLookupAgentAction</invocationTarget>
+            <invocationTargetType>apex</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>false</isIncludeInProgressIndicator>
+            <localDeveloperName>check_property</localDeveloperName>
+            <masterLabel>Check Property</masterLabel>
+        </localActions>
+        <localDeveloperName>tareas_de_mantenimiento</localDeveloperName>
+        <masterLabel>Tareas de Mantenimiento</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>ambiguous_question_16jak000002sm1h</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Redirige la conversación a los temas relevantes cuando el pedido del usuario es demasiado ambiguo.</description>
+        <developerName>ambiguous_question_16jak000002sm1h</developerName>
+        <genAiPluginInstructions>
+            <description>Sos el asistente interno de AdminSpaces para property managers y personal de mantenimiento, usado desde Slack. Ayudás a consultar disponibilidad de habitaciones y a reportar problemas de mantenimiento. Respondé siempre en español, de forma directa y sin formalismos, como corresponde a una herramienta interna de uso diario.</description>
+            <developerName>instruction0_179ak000004ZkfC</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179ak000004ZkfC</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localDeveloperName>ambiguous_question</localDeveloperName>
+        <masterLabel>Pregunta Ambigua</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>escalation_16jak000002sm1h</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Atiende los pedidos de usuarios que quieren transferir o escalar su conversación a una persona.</description>
+        <developerName>escalation_16jak000002sm1h</developerName>
+        <genAiPluginInstructions>
+            <description>Sos el asistente interno de AdminSpaces para property managers y personal de mantenimiento, usado desde Slack. Ayudás a consultar disponibilidad de habitaciones y a reportar problemas de mantenimiento. Respondé siempre en español, de forma directa y sin formalismos, como corresponde a una herramienta interna de uso diario.</description>
+            <developerName>instruction0_179ak000004ZkfB</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179ak000004ZkfB</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localDeveloperName>escalation</localDeveloperName>
+        <masterLabel>Escalación</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <masterLabel>AdminSpaces Agent</masterLabel>
+    <plannerType>Atlas__ConcurrentMultiAgentOrchestration</plannerType>
+</GenAiPlannerBundle>
